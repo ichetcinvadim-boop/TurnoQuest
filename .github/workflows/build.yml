@@ -8,7 +8,7 @@ on:
       - "release/**"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -33,14 +33,16 @@ jobs:
       - name: Prepare downloads
         run: |
           mkdir -p release
-          cp target/turnoquests-1.2.0.jar release/TurnoQuests-1.2.0.jar
-          zip -j release/TurnoQuests-1.2.0-package.zip release/TurnoQuests-1.2.0.jar README.md TEST-REPORT.md
-          sha256sum release/TurnoQuests-1.2.0.jar release/TurnoQuests-1.2.0-package.zip > release/SHA256.txt
+          cp target/turnoquests-1.2.1.jar release/TurnoQuests-1.2.1.jar
+          zip -j release/TurnoQuests-1.2.1-package.zip release/TurnoQuests-1.2.1.jar README.md TEST-REPORT.md
+          sha256sum release/TurnoQuests-1.2.1.jar release/TurnoQuests-1.2.1-package.zip > release/SHA256-1.2.1.txt
 
-      - name: Publish downloads
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add release
-          git diff --cached --quiet || git commit -m "Build TurnoQuests 1.2.0 [skip ci]"
-          git push
+      - name: Upload verified downloads
+        uses: actions/upload-artifact@v4
+        with:
+          name: TurnoQuests-1.2.1
+          path: |
+            release/TurnoQuests-1.2.1.jar
+            release/TurnoQuests-1.2.1-package.zip
+            release/SHA256-1.2.1.txt
+          if-no-files-found: error
