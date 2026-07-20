@@ -169,7 +169,8 @@ public final class TestRunner {
         String config = Files.readString(project.resolve("src/main/resources/config.yml"));
         String quests = Files.readString(project.resolve("src/main/resources/quests.yml"));
         check(plugin.contains("api-version: '1.21'"), "api version");
-        check(plugin.contains("version: 1.2.0"), "plugin version");
+        check(plugin.contains("version: 1.2.1"), "plugin version");
+        check(config.contains("glowing: true"), "npc visibility default");
         check(plugin.contains("turnoquests.admin.reset") && plugin.contains("turnoquests.admin.reward"), "permissions documented");
         check(plugin.contains("aliases: [tq]"), "tq alias");
         check(config.contains("quest-reward-multiplier: 0.4"), "economy balanced");
