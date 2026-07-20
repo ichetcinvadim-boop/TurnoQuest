@@ -1,0 +1,42 @@
+name: TurnoQuests
+version: 1.2.0
+main: pro.turnoworld.quests.TurnoQuests
+api-version: '1.21'
+author: TurnoWorld
+description: Последовательная система из 100 квестов для TurnoWorld
+depend: [Vault]
+softdepend: [ExecutableItems]
+commands:
+  quests:
+    description: Открыть меню квестов
+    aliases: [quest, квесты, tqmenu]
+    permission: turnoquests.use
+  turnoquests:
+    description: Управление TurnoQuests
+    aliases: [tq]
+permissions:
+  turnoquests.use:
+    default: true
+  turnoquests.tracker:
+    default: true
+  turnoquests.admin:
+    default: op
+    children:
+      turnoquests.admin.info: true
+      turnoquests.admin.progress: true
+      turnoquests.admin.reset: true
+      turnoquests.admin.reward: true
+      turnoquests.admin.reload: true
+      turnoquests.admin.validate: true
+      turnoquests.admin.backup: true
+      turnoquests.admin.history: true
+      turnoquests.admin.npc: true
+  turnoquests.admin.info: {default: op}
+  turnoquests.admin.progress: {default: op}
+  turnoquests.admin.reset: {default: op}
+  turnoquests.admin.reward: {default: op}
+  turnoquests.admin.reload: {default: op}
+  turnoquests.admin.validate: {default: op}
+  turnoquests.admin.backup: {default: op}
+  turnoquests.admin.history: {default: op}
+  turnoquests.admin.npc: {default: op}

@@ -1,0 +1,63 @@
+language: ru
+timezone: Europe/Moscow
+autosave-seconds: 60
+backup-on-start: true
+backup-interval-hours: 12
+
+economy:
+  enabled: true
+  # Итог за все 100 квестов: около 625 000, без учёта сложных бонусов.
+  quest-reward-multiplier: 0.4
+  # Без Vault деньги останутся в очереди и будут выданы после появления экономики.
+
+executable-items:
+  give-command: "ei give %player% %item% 1"
+  rewards:
+    1: luk_astralnogo_shtorma
+    2: kub_rosta_single
+    3: 02_kirka_shahtyora
+    4: 04_topor_drovoseka
+    5: 08_pulse_boots
+    6: heart_of_abyss
+    7: aura_armor_hardness
+    8: totem_dragonid
+    9: 01_frostmourn
+    10: 09_krylya_arhangela
+
+gui:
+  title: "&0Квесты TurnoWorld"
+  current-glow: true
+  filler: BLACK_STAINED_GLASS_PANE
+
+tracker:
+  enabled: true
+  interval-ticks: 40
+
+anti-exploit:
+  ignore-creative: true
+  ignore-player-placed-blocks: true
+  ignore-spawner-and-egg-mobs: true
+npc:
+  enabled: true
+  entity-type: VILLAGER
+  name: "&6&lКвестовый проводник"
+  # Координаты автоматически заполняются командой /tq npc set.
+  world: ""
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  yaw: 0.0
+  pitch: 0.0
+
+milestones:
+  broadcast-chapters: true
+  title-chapters: true
+
+global-weekly:
+  enabled: true
+  required: 25000
+  reward-money: 25000
+
+postgame:
+  enabled: true
+  prestige-money: 150000

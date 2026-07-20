@@ -1,0 +1,122 @@
+chapters:
+  1: {name: "Первые шаги", reward: luk_astralnogo_shtorma}
+  2: {name: "Путь охотника", reward: kub_rosta_single}
+  3: {name: "Земледелец", reward: 02_kirka_shahtyora}
+  4: {name: "Глубины шахты", reward: 04_topor_drovoseka}
+  5: {name: "Архитектор", reward: 08_pulse_boots}
+  6: {name: "За горизонтом", reward: heart_of_abyss}
+  7: {name: "Пламя Незера", reward: aura_armor_hardness}
+  8: {name: "Край мира", reward: totem_dragonid}
+  9: {name: "Герой TurnoWorld", reward: 01_frostmourn}
+  10: {name: "Легенда", reward: 09_krylya_arhangela}
+
+quests:
+  1: {name: "Первое дерево", description: "Добудьте дубовые брёвна", type: BREAK, target: OAK_LOG, required: 16, money: 500, icon: OAK_LOG}
+  2: {name: "Своя мастерская", description: "Создайте верстак", type: CRAFT, target: CRAFTING_TABLE, required: 1, money: 500, icon: CRAFTING_TABLE}
+  3: {name: "Первый инструмент", description: "Создайте деревянную кирку", type: CRAFT, target: WOODEN_PICKAXE, required: 1, money: 600, icon: WOODEN_PICKAXE}
+  4: {name: "Каменный запас", description: "Добудьте булыжник", type: BREAK, target: STONE, required: 32, money: 700, icon: COBBLESTONE}
+  5: {name: "Горячее начало", description: "Создайте печь", type: CRAFT, target: FURNACE, required: 1, money: 700, icon: FURNACE}
+  6: {name: "Железный век", description: "Переплавьте железо", type: SMELT, target: IRON_INGOT, required: 8, money: 900, icon: IRON_INGOT}
+  7: {name: "Защита новичка", description: "Создайте щит", type: CRAFT, target: SHIELD, required: 1, money: 900, icon: SHIELD}
+  8: {name: "Сытный путь", description: "Съешьте хлеб", type: CONSUME, target: BREAD, required: 5, money: 1000, icon: BREAD}
+  9: {name: "Первая ночь", description: "Поспите в кровати", type: SLEEP, target: ANY, required: 1, money: 1200, icon: RED_BED}
+  10: {name: "Испытание мертвецами", description: "Победите зомби", type: KILL, target: ZOMBIE, required: 20, money: 5000, icon: BOW, no-death-bonus: true, bonus-money: 1500}
+
+  11: {name: "Зачистка", description: "Победите зомби", type: KILL, target: ZOMBIE, required: 30, money: 1500, icon: ROTTEN_FLESH}
+  12: {name: "Дуэль стрелков", description: "Победите скелетов", type: KILL, target: SKELETON, required: 25, money: 1800, icon: BONE}
+  13: {name: "Паучье логово", description: "Победите пауков", type: KILL, target: SPIDER, required: 20, money: 2000, icon: SPIDER_EYE}
+  14: {name: "Тихий взрыв", description: "Победите криперов", type: KILL, target: CREEPER, required: 15, money: 2200, icon: GUNPOWDER}
+  15: {name: "Точный удар", description: "Нанесите урон существам", type: DAMAGE, target: ANY, required: 1000, money: 2400, icon: IRON_SWORD}
+  16: {name: "Глаза ночи", description: "Победите эндерменов", type: KILL, target: ENDERMAN, required: 8, money: 2500, icon: ENDER_PEARL}
+  17: {name: "Утопленники", description: "Победите утопленников", type: KILL, target: DROWNED, required: 12, money: 2600, icon: TRIDENT}
+  18: {name: "Налётчики", description: "Победите разбойников", type: KILL, target: PILLAGER, required: 20, money: 2800, icon: CROSSBOW}
+  19: {name: "Большая охота", description: "Победите любых существ за отведённое время", type: KILL, target: ANY, required: 150, money: 3000, icon: DIAMOND_SWORD, timed: true, time-limit-seconds: 3600, bonus-money: 3000}
+  20: {name: "Опытный охотник", description: "Победите триста любых существ", type: KILL, target: ANY, required: 300, money: 10000, icon: DIAMOND_SWORD, no-death-bonus: true, bonus-money: 4000}
+
+  21: {name: "Первый урожай", description: "Соберите пшеницу", type: BREAK, target: WHEAT, required: 64, money: 2500, icon: WHEAT}
+  22: {name: "Новая жизнь", description: "Разводите животных", type: BREED, target: ANY, required: 12, money: 2800, icon: WHEAT_SEEDS}
+  23: {name: "Верный друг", description: "Приручите волка", type: TAME, target: WOLF, required: 1, money: 3000, icon: BONE}
+  24: {name: "Мягкая шерсть", description: "Постригите овец", type: SHEAR, target: SHEEP, required: 20, money: 3200, icon: SHEARS}
+  25: {name: "Рыба к столу", description: "Поймайте рыбу", type: FISH, target: ANY, required: 20, money: 3500, icon: FISHING_ROD}
+  26: {name: "Золотой рацион", description: "Съешьте золотую морковь", type: CONSUME, target: GOLDEN_CARROT, required: 16, money: 3800, icon: GOLDEN_CARROT}
+  27: {name: "Морковные грядки", description: "Соберите морковь", type: BREAK, target: CARROTS, required: 128, money: 4000, icon: CARROT}
+  28: {name: "Картофельные поля", description: "Соберите картофель", type: BREAK, target: POTATOES, required: 128, money: 4200, icon: POTATO}
+  29: {name: "Большая ферма", description: "Разводите коров", type: BREED, target: COW, required: 24, money: 4500, icon: LEATHER}
+  30: {name: "Изобильный урожай", description: "Соберите пятьсот двенадцать единиц пшеницы", type: BREAK, target: WHEAT, required: 512, money: 15000, icon: HAY_BLOCK, timed: true, time-limit-seconds: 86400, bonus-money: 5000}
+
+  31: {name: "Угольная жила", description: "Добудьте угольную руду", type: BREAK, target: COAL_ORE, required: 128, money: 4000, icon: COAL_ORE}
+  32: {name: "Железная жила", description: "Добудьте железную руду", type: BREAK, target: IRON_ORE, required: 96, money: 4500, icon: IRON_ORE}
+  33: {name: "Медная жила", description: "Добудьте медную руду", type: BREAK, target: COPPER_ORE, required: 128, money: 4500, icon: COPPER_ORE}
+  34: {name: "Золотая жила", description: "Добудьте золотую руду", type: BREAK, target: GOLD_ORE, required: 64, money: 5000, icon: GOLD_ORE}
+  35: {name: "Красный механизм", description: "Добудьте редстоуновую руду", type: BREAK, target: REDSTONE_ORE, required: 128, money: 5200, icon: REDSTONE_ORE}
+  36: {name: "Лазуритовый след", description: "Добудьте лазуритовую руду", type: BREAK, target: LAPIS_ORE, required: 64, money: 5500, icon: LAPIS_ORE}
+  37: {name: "Алмазная лихорадка", description: "Добудьте алмазную руду", type: BREAK, target: DIAMOND_ORE, required: 32, money: 6500, icon: DIAMOND_ORE}
+  38: {name: "Глубинный проход", description: "Добудьте глубинный сланец", type: BREAK, target: DEEPSLATE, required: 1024, money: 7000, icon: DEEPSLATE}
+  39: {name: "Без остановки", description: "Разрушьте любые природные блоки за отведённое время", type: BREAK, target: ANY, required: 2500, money: 8000, icon: NETHERITE_PICKAXE, timed: true, time-limit-seconds: 7200, bonus-money: 5000}
+  40: {name: "Обсидиановый рубеж", description: "Добудьте шестьдесят четыре блока обсидиана", type: BREAK, target: OBSIDIAN, required: 64, money: 20000, icon: OBSIDIAN, no-death-bonus: true, bonus-money: 7000}
+
+  41: {name: "Каменный фундамент", description: "Установите каменные кирпичи", type: PLACE, target: STONE_BRICKS, required: 256, money: 5500, icon: STONE_BRICKS}
+  42: {name: "Панорамные окна", description: "Установите стекло", type: PLACE, target: GLASS, required: 128, money: 5800, icon: GLASS}
+  43: {name: "Свет большого города", description: "Создайте фонари", type: CRAFT, target: LANTERN, required: 64, money: 6000, icon: LANTERN}
+  44: {name: "Деревянный квартал", description: "Установите дубовые доски", type: PLACE, target: OAK_PLANKS, required: 512, money: 6200, icon: OAK_PLANKS}
+  45: {name: "Высотные работы", description: "Создайте строительные леса", type: CRAFT, target: SCAFFOLDING, required: 128, money: 6500, icon: SCAFFOLDING}
+  46: {name: "Цветные стены", description: "Установите терракоту", type: PLACE, target: TERRACOTTA, required: 256, money: 6800, icon: TERRACOTTA}
+  47: {name: "Работа камнереза", description: "Создайте резные каменные кирпичи", type: CRAFT, target: CHISELED_STONE_BRICKS, required: 128, money: 7000, icon: CHISELED_STONE_BRICKS}
+  48: {name: "Кирпичный район", description: "Установите кирпичные блоки", type: PLACE, target: BRICKS, required: 256, money: 7500, icon: BRICKS}
+  49: {name: "Мегастройка", description: "Установите любые блоки", type: PLACE, target: ANY, required: 1500, money: 9000, icon: BEACON, timed: true, time-limit-seconds: 10800, bonus-money: 6000}
+  50: {name: "Белый дворец", description: "Установите пятьсот двенадцать кварцевых блоков", type: PLACE, target: QUARTZ_BLOCK, required: 512, money: 25000, icon: QUARTZ_BLOCK, timed: true, time-limit-seconds: 172800, bonus-money: 8000}
+
+  51: {name: "Дальняя дорога", description: "Пройдите десять тысяч блоков", type: WALK, target: ANY, required: 10000, money: 7000, icon: LEATHER_BOOTS}
+  52: {name: "Жаркие земли", description: "Посетите пустыню", type: VISIT_BIOME, target: DESERT, required: 1, money: 7500, icon: SAND}
+  53: {name: "Красные каньоны", description: "Посетите бесплодные земли", type: VISIT_BIOME, target: BADLANDS, required: 1, money: 8000, icon: RED_SAND}
+  54: {name: "Портал в огонь", description: "Войдите в Незер", type: VISIT_WORLD, target: NETHER, required: 1, money: 8500, icon: OBSIDIAN}
+  55: {name: "Искатель приключений", description: "Получите достижение «Время приключений»", type: ADVANCEMENT, target: MINECRAFT:ADVENTURE/ADVENTURING_TIME, required: 1, money: 9000, icon: MAP}
+  56: {name: "Рыбак-путешественник", description: "Поймайте рыбу в пути", type: FISH, target: ANY, required: 50, money: 9500, icon: COD}
+  57: {name: "Марафон", description: "Быстро пройдите тридцать тысяч блоков", type: WALK, target: ANY, required: 30000, money: 10000, icon: COMPASS, timed: true, time-limit-seconds: 14400, bonus-money: 8000}
+  58: {name: "Древний город", description: "Посетите глубокую тьму", type: VISIT_BIOME, target: DEEP_DARK, required: 1, money: 11000, icon: SCULK}
+  59: {name: "Розовый горизонт", description: "Посетите вишнёвую рощу", type: VISIT_BIOME, target: CHERRY_GROVE, required: 1, money: 12000, icon: CHERRY_SAPLING}
+  60: {name: "Великий путешественник", description: "Пройдите семьдесят пять тысяч блоков", type: WALK, target: ANY, required: 75000, money: 30000, icon: RECOVERY_COMPASS, timed: true, time-limit-seconds: 604800, bonus-money: 10000}
+
+  61: {name: "Возвращение в пламя", description: "Войдите в Незер", type: VISIT_WORLD, target: NETHER, required: 1, money: 9000, icon: NETHERRACK}
+  62: {name: "Незерский тоннель", description: "Добудьте незерак", type: BREAK, target: NETHERRACK, required: 1024, money: 10000, icon: NETHERRACK}
+  63: {name: "Золото пиглинов", description: "Победите пиглинов", type: KILL, target: PIGLIN, required: 75, money: 11000, icon: GOLD_INGOT}
+  64: {name: "Огненные стержни", description: "Победите ифритов", type: KILL, target: BLAZE, required: 40, money: 12000, icon: BLAZE_ROD}
+  65: {name: "Обломки прошлого", description: "Добудьте древние обломки", type: BREAK, target: ANCIENT_DEBRIS, required: 16, money: 14000, icon: ANCIENT_DEBRIS}
+  66: {name: "Незеритовый сплав", description: "Создайте незеритовые слитки", type: CRAFT, target: NETHERITE_INGOT, required: 4, money: 15000, icon: NETHERITE_INGOT}
+  67: {name: "Чёрные кости", description: "Победите визер-скелетов", type: KILL, target: WITHER_SKELETON, required: 35, money: 16000, icon: WITHER_SKELETON_SKULL}
+  68: {name: "Жаростойкость", description: "Используйте зелья в Незере", type: CONSUME, target: POTION, required: 5, money: 17000, icon: POTION}
+  69: {name: "Несокрушимый", description: "Нанесите большой урон в Незере", type: DAMAGE, target: ANY, required: 10000, money: 18000, icon: NETHERITE_SWORD}
+  70: {name: "Сокровище Незера", description: "Создайте два незеритовых блока", type: CRAFT, target: NETHERITE_BLOCK, required: 2, money: 40000, icon: NETHERITE_BLOCK, no-death-bonus: true, bonus-money: 12000}
+
+  71: {name: "За гранью", description: "Войдите в Энд", type: VISIT_WORLD, target: THE_END, required: 1, money: 12000, icon: END_PORTAL_FRAME}
+  72: {name: "Армия странников", description: "Победите эндерменов", type: KILL, target: ENDERMAN, required: 100, money: 14000, icon: ENDER_EYE}
+  73: {name: "Камень Края", description: "Добудьте эндерняк", type: BREAK, target: END_STONE, required: 512, money: 15000, icon: END_STONE}
+  74: {name: "Панцири города", description: "Победите шалкеров", type: KILL, target: SHULKER, required: 25, money: 17000, icon: SHULKER_SHELL}
+  75: {name: "Карманное хранилище", description: "Создайте шалкеровые ящики", type: CRAFT, target: SHULKER_BOX, required: 4, money: 18000, icon: SHULKER_BOX}
+  76: {name: "Высокие острова", description: "Посетите возвышенности Энда", type: VISIT_BIOME, target: END_HIGHLANDS, required: 1, money: 19000, icon: CHORUS_FLOWER}
+  77: {name: "Крылья свободы", description: "Получите достижение с элитрами", type: ADVANCEMENT, target: MINECRAFT:END/ELYTRA, required: 1, money: 20000, icon: ELYTRA}
+  78: {name: "Драконоборец", description: "Победите дракона Края", type: KILL, target: ENDER_DRAGON, required: 1, money: 24000, icon: DRAGON_HEAD}
+  79: {name: "Возрождение дракона", description: "Создайте четыре кристалла Края", type: CRAFT, target: END_CRYSTAL, required: 4, money: 28000, icon: END_CRYSTAL, no-death-bonus: true, bonus-money: 12000}
+  80: {name: "Новый бой", description: "Возродите дракона Края и получите достижение", type: ADVANCEMENT, target: MINECRAFT:END/RESPAWN_DRAGON, required: 1, money: 50000, icon: DRAGON_BREATH, no-death-bonus: true, bonus-money: 15000}
+
+  81: {name: "Сокрушитель набегов", description: "Победите разорителей", type: KILL, target: RAVAGER, required: 10, money: 18000, icon: SADDLE}
+  82: {name: "Охота на заклинателей", description: "Победите заклинателей", type: KILL, target: EVOKER, required: 20, money: 20000, icon: TOTEM_OF_UNDYING}
+  83: {name: "Тишина глубин", description: "Победите вардена", type: KILL, target: WARDEN, required: 1, money: 30000, icon: ECHO_SHARD}
+  84: {name: "Щит героя", description: "Заблокируйте щитом урон", type: BLOCK_DAMAGE, target: ANY, required: 5000, money: 22000, icon: SHIELD}
+  85: {name: "Великий зачарователь", description: "Зачаруйте предметы", type: ENCHANT, target: ANY, required: 30, money: 24000, icon: ENCHANTING_TABLE}
+  86: {name: "Герой деревни", description: "Получите достижение героя деревни", type: ADVANCEMENT, target: MINECRAFT:ADVENTURE/HERO_OF_THE_VILLAGE, required: 1, money: 26000, icon: EMERALD}
+  87: {name: "Гроза визеров", description: "Победите визеров", type: KILL, target: WITHER, required: 2, money: 32000, icon: NETHER_STAR}
+  88: {name: "Полная мощность", description: "Создайте маяк максимальной мощности", type: ADVANCEMENT, target: MINECRAFT:NETHER/CREATE_FULL_BEACON, required: 1, money: 40000, icon: BEACON, no-death-bonus: true, bonus-money: 15000}
+  89: {name: "Двойной рубеж", description: "Победите драконов Края", type: KILL, target: ENDER_DRAGON, required: 2, money: 45000, icon: DRAGON_BREATH}
+  90: {name: "Король героев", description: "Победите трёх драконов без смерти", type: KILL, target: ENDER_DRAGON, required: 3, money: 65000, icon: DRAGON_EGG, no-death-bonus: true, bonus-money: 20000}
+
+  91: {name: "Легион мертвецов", description: "Победите зомби", type: KILL, target: ZOMBIE, required: 500, money: 30000, icon: ZOMBIE_HEAD}
+  92: {name: "Костяная буря", description: "Победите скелетов", type: KILL, target: SKELETON, required: 400, money: 32000, icon: SKELETON_SKULL}
+  93: {name: "Алмазная бездна", description: "Добудьте алмазную руду", type: BREAK, target: DIAMOND_ORE, required: 128, money: 35000, icon: DIAMOND_BLOCK}
+  94: {name: "Сто тысяч шагов", description: "Пройдите сто тысяч блоков", type: WALK, target: ANY, required: 100000, money: 38000, icon: NETHERITE_BOOTS}
+  95: {name: "Сила легенды", description: "Нанесите сто тысяч урона", type: DAMAGE, target: ANY, required: 100000, money: 40000, icon: NETHERITE_AXE}
+  96: {name: "Три стража", description: "Победите трёх варденов", type: KILL, target: WARDEN, required: 3, money: 45000, icon: SCULK_SHRIEKER}
+  97: {name: "Пять бурь", description: "Победите пять визеров", type: KILL, target: WITHER, required: 5, money: 50000, icon: WITHER_SKELETON_SKULL}
+  98: {name: "Пять драконов", description: "Победите пять драконов Края", type: KILL, target: ENDER_DRAGON, required: 5, money: 60000, icon: END_CRYSTAL}
+  99: {name: "Последняя зачистка", description: "Победите две тысячи пятьсот любых существ", type: KILL, target: ANY, required: 2500, money: 75000, icon: NETHER_STAR, timed: true, time-limit-seconds: 604800, bonus-money: 25000}
+  100: {name: "Невозможное возможно", description: "Получите достижение «Как мы сюда попали?»", type: ADVANCEMENT, target: MINECRAFT:NETHER/ALL_EFFECTS, required: 1, money: 100000, icon: DRAGON_EGG, no-death-bonus: true, bonus-money: 50000}
