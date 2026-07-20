@@ -41,6 +41,7 @@ npc:
   enabled: true
   entity-type: VILLAGER
   name: "&6&lКвестовый проводник"
+  glowing: true
   # Координаты автоматически заполняются командой /tq npc set.
   world: ""
   x: 0.0
