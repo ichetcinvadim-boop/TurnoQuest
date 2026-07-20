@@ -199,9 +199,9 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
         String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "help";
         if (action.equals("set")) {
             if (!(sender instanceof Player player)) { sender.sendMessage(plugin.color("&cNPC ставится в позиции игрока. Выполните команду из игры.")); return true; }
-            sender.sendMessage(plugin.color(plugin.prefix() + (plugin.npcService().setLocation(player) ? "&aКвестовый NPC установлен." : "&cНе удалось установить NPC.")));
+            sender.sendMessage(plugin.color(plugin.prefix() + (plugin.npcService().setLocation(player) ? "&aКвестовый NPC установлен: &f" + plugin.npcService().locationText() : "&cНе удалось установить NPC. Проверьте консоль.")));
         } else if (action.equals("spawn")) {
-            sender.sendMessage(plugin.color(plugin.prefix() + (plugin.npcService().spawn() ? "&aКвестовый NPC создан." : "&cСначала задайте позицию: /tq npc set")));
+            sender.sendMessage(plugin.color(plugin.prefix() + (plugin.npcService().spawn() ? "&aКвестовый NPC создан: &f" + plugin.npcService().locationText() : "&cНе удалось создать NPC. Используйте /tq npc set и проверьте консоль.")));
         } else if (action.equals("remove")) {
             plugin.npcService().remove();
             sender.sendMessage(plugin.color(plugin.prefix() + "&eКвестовый NPC удалён."));
@@ -223,7 +223,7 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
     }
 
     private void help(CommandSender sender) {
-        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.2.0"));
+        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.2.1"));
         sender.sendMessage(plugin.color("&e/quests [1-10] &7— меню или глава"));
         sender.sendMessage(plugin.color("&e/tq info <игрок|UUID> &7— офлайн-информация"));
         sender.sendMessage(plugin.color("&e/tq skip|complete <игрок|UUID> [квест]"));
