@@ -13,6 +13,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 
+import java.util.Locale;
+
 public final class QuestNpcService implements Listener {
     private static final String TAG = "turnoquests_npc";
     private final TurnoQuests plugin;
@@ -26,7 +28,8 @@ public final class QuestNpcService implements Listener {
     }
 
     public boolean setLocation(Player player) {
-        Location l = player.getLocation();
+        Location source = player.getLocation();
+        Location l = new Location(source.getWorld(), source.getBlockX() + 0.5, source.getBlockY(), source.getBlockZ() + 0.5, source.getYaw(), 0);
         plugin.getConfig().set("npc.world", l.getWorld().getName());
         plugin.getConfig().set("npc.x", l.getX());
         plugin.getConfig().set("npc.y", l.getY());
@@ -41,26 +44,59 @@ public final class QuestNpcService implements Listener {
 
     public boolean spawn() {
         if (!configured()) return false;
-        if (npc != null && npc.isValid()) return true;
-        World world = Bukkit.getWorld(plugin.getConfig().getString("npc.world", ""));
-        if (world == null) return false;
-        Location location = new Location(world, plugin.getConfig().getDouble("npc.x"), plugin.getConfig().getDouble("npc.y"),
-                plugin.getConfig().getDouble("npc.z"), (float) plugin.getConfig().getDouble("npc.yaw"), (float) plugin.getConfig().getDouble("npc.pitch"));
+        Location location = configuredLocation();
+        if (location == null) return false;
+        location.getChunk().load();
+        if (npc != null && npc.isValid() && !npc.isDead()) {
+            npc.teleport(location);
+            configure(npc, location);
+            return true;
+        }
+        return create(location, true);
+    }
+
+    private boolean create(Location location, boolean retry) {
         EntityType type;
-        try { type = EntityType.valueOf(plugin.getConfig().getString("npc.entity-type", "VILLAGER").toUpperCase()); }
+        try { type = EntityType.valueOf(plugin.getConfig().getString("npc.entity-type", "VILLAGER").toUpperCase(Locale.ROOT)); }
         catch (IllegalArgumentException e) { type = EntityType.VILLAGER; }
-        npc = world.spawnEntity(location, type);
-        if (!(npc instanceof LivingEntity living)) { npc.remove(); npc = null; return false; }
-        npc.addScoreboardTag(TAG);
-        npc.setCustomName(plugin.color(plugin.getConfig().getString("npc.name", "&6&lКвестовый проводник")));
-        npc.setCustomNameVisible(true);
-        npc.setInvulnerable(true);
-        npc.setPersistent(true);
-        npc.setGravity(false);
+        Entity created;
+        try { created = location.getWorld().spawnEntity(location, type); }
+        catch (RuntimeException e) {
+            plugin.getLogger().warning("Не удалось создать квестового NPC: " + e.getMessage());
+            return false;
+        }
+        if (!(created instanceof LivingEntity)) { created.remove(); return false; }
+        npc = created;
+        configure(created, location);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (created.isValid() && !created.isDead()) {
+                created.teleport(location);
+                configure(created, location);
+                return;
+            }
+            if (npc == created) npc = null;
+            if (retry) {
+                plugin.getLogger().warning("NPC был удалён другим плагином сразу после создания. Выполняется повторная попытка.");
+                create(location, false);
+            }
+        }, 10L);
+        return created.isValid() && !created.isDead();
+    }
+
+    private void configure(Entity entity, Location location) {
+        if (!(entity instanceof LivingEntity living)) return;
+        entity.addScoreboardTag(TAG);
+        entity.setCustomName(plugin.color(plugin.getConfig().getString("npc.name", "&6&lКвестовый проводник")));
+        entity.setCustomNameVisible(true);
+        entity.setInvulnerable(true);
+        entity.setPersistent(true);
+        entity.setGravity(true);
+        entity.setGlowing(plugin.getConfig().getBoolean("npc.glowing", true));
+        entity.setRotation(location.getYaw(), 0);
+        living.setInvisible(false);
         living.setAI(false);
         living.setSilent(true);
         living.setCollidable(false);
-        return true;
     }
 
     public void remove() {
@@ -82,6 +118,19 @@ public final class QuestNpcService implements Listener {
     private boolean configured() {
         String world = plugin.getConfig().getString("npc.world", "");
         return world != null && !world.isBlank();
+    }
+
+    private Location configuredLocation() {
+        World world = Bukkit.getWorld(plugin.getConfig().getString("npc.world", ""));
+        if (world == null) return null;
+        return new Location(world, plugin.getConfig().getDouble("npc.x"), plugin.getConfig().getDouble("npc.y"),
+                plugin.getConfig().getDouble("npc.z"), (float) plugin.getConfig().getDouble("npc.yaw"), 0);
+    }
+
+    public String locationText() {
+        Location l = npc != null && npc.isValid() ? npc.getLocation() : configuredLocation();
+        if (l == null) return "не задана";
+        return l.getWorld().getName() + " " + l.getBlockX() + " " + l.getBlockY() + " " + l.getBlockZ();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
