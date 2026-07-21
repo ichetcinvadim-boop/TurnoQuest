@@ -48,7 +48,7 @@ public final class QuestListener implements Listener {
 
     @EventHandler public void onJoin(PlayerJoinEvent event) {
         plugin.data(event.getPlayer());
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> { plugin.checkCurrentState(event.getPlayer()); plugin.processPending(event.getPlayer()); }, 40L);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.checkCurrentState(event.getPlayer()), 40L);
     }
     @EventHandler public void onQuit(PlayerQuitEvent event) {
         PlayerData data = plugin.data(event.getPlayer());
