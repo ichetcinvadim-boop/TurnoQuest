@@ -41,6 +41,14 @@ public final class TurnoQuests extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        try { enablePlugin(); }
+        catch (Throwable error) {
+            getLogger().log(Level.SEVERE, "TurnoQuests не смог включиться. Полная причина:", error);
+            getServer().getPluginManager().disablePlugin(this);
+        }
+    }
+
+    private void enablePlugin() {
         saveDefaultConfig();
         ensureResource("quests.yml");
         ensureResource("messages.yml");

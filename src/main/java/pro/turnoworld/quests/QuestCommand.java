@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.logging.Level;
 
 public final class QuestCommand implements CommandExecutor, TabCompleter {
     private final TurnoQuests plugin;
@@ -20,6 +21,15 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        try { return execute(sender, command, label, args); }
+        catch (Throwable error) {
+            plugin.getLogger().log(Level.SEVERE, "Ошибка команды /" + label + " " + String.join(" ", args), error);
+            sender.sendMessage(plugin.color(plugin.prefix() + "&cОшибка команды записана в консоль. Код: &f" + error.getClass().getSimpleName()));
+            return true;
+        }
+    }
+
+    private boolean execute(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("quests")) return playerCommand(sender, args);
         if (args.length == 0) { help(sender); return true; }
         String sub = args[0].toLowerCase(Locale.ROOT);
@@ -223,7 +233,7 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
     }
 
     private void help(CommandSender sender) {
-        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.3.0"));
+        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.3.1"));
         sender.sendMessage(plugin.color("&e/quests [1-10] &7— меню или глава"));
         sender.sendMessage(plugin.color("&e/tq info <игрок|UUID> &7— офлайн-информация"));
         sender.sendMessage(plugin.color("&e/tq skip|complete <игрок|UUID> [квест]"));
