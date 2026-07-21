@@ -54,16 +54,21 @@ public final class AbiVerifier {
                     new ClassReader(input).accept(new ClassVisitor(Opcodes.ASM9) {
                         Info info;
                         @Override public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-                            info = classes.computeIfAbsent(name, ignored -> new Info());
+                            // The Paper classpath can also contain an old transitive Bukkit API
+                            // (for example through Vault). Runtime uses Paper's first definition,
+                            // so a later duplicate must not overwrite its hierarchy.
+                            if (classes.containsKey(name)) { info = null; return; }
+                            info = new Info();
+                            classes.put(name, info);
                             info.superName = superName;
                             info.interfaces = List.of(interfaces);
                         }
                         @Override public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-                            info.methods.add(name + descriptor);
+                            if (info != null) info.methods.add(name + descriptor);
                             return null;
                         }
                         @Override public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-                            info.fields.add(name + ":" + descriptor);
+                            if (info != null) info.fields.add(name + ":" + descriptor);
                             return null;
                         }
                     }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
