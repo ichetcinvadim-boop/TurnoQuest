@@ -162,23 +162,48 @@ public final class TurnoQuests extends JavaPlugin {
     public void complete(Player online, PlayerData data, QuestDefinition quest, boolean timed, boolean noDeath, boolean announce) {
         data.progress = quest.required();
         rewards.queueQuest(data, quest, timed, noDeath);
-        engine.advance(data, quest, System.currentTimeMillis());
         if (announce && online != null) {
             online.sendMessage(color(prefix() + "&aКвест #" + quest.id() + " «" + quest.name() + "» выполнен!"));
-            online.sendTitle(color("&6Квест выполнен"), color("&f#" + quest.id() + " &7— &e" + quest.name()), 10, 55, 15);
+            online.sendMessage(color(prefix() + "&eОткройте /quests и нажмите зелёную кнопку, чтобы забрать награду."));
+            online.sendTitle(color("&aНаграда готова"), color("&fНажмите зелёную кнопку в &e/quests"), 10, 55, 15);
         }
-        if (quest.id() % 10 == 0 && announce) announceChapter(online, data, quest.chapter());
-        if (online != null) processPending(online);
-        else rewards.claim(data, null, catalog);
-        if (online != null) checkCurrentState(online);
         trySave(data);
+    }
+
+    public synchronized boolean claimQuestReward(Player player, int questId) {
+        PlayerData data = data(player);
+        if (data.finished() || data.currentQuest != questId) {
+            player.sendMessage(color(prefix() + "&cЭто не ваш текущий квест."));
+            return false;
+        }
+        QuestDefinition quest = catalog.get(questId);
+        if (!data.rewardReady(quest)) {
+            player.sendMessage(color(prefix() + "&cСначала выполните квест полностью."));
+            return false;
+        }
+
+        List<String> result = rewards.claimQuest(data, player, catalog, questId);
+        for (String line : result) player.sendMessage(color(prefix() + line));
+        if (rewards.hasPendingForQuest(data, quest)) {
+            player.sendMessage(color(prefix() + "&eНаграда сохранена. Исправьте указанную проблему и нажмите зелёную кнопку ещё раз."));
+            trySave(data);
+            return false;
+        }
+
+        engine.advance(data, quest, System.currentTimeMillis());
+        if (quest.id() % 10 == 0) announceChapter(player, data, quest.chapter());
+        player.sendMessage(color(prefix() + "&aНаграда за квест #" + quest.id() + " получена. Следующий квест открыт!"));
+        player.sendTitle(color("&aНаграда получена"), color(data.finished() ? "&dВсе 100 квестов завершены" : "&eОткрыт квест #" + data.currentQuest), 10, 45, 15);
+        trySave(data);
+        checkCurrentState(player);
+        return true;
     }
 
     private void announceChapter(Player player, PlayerData data, int chapter) {
         String text = "&6&l" + data.lastName + " &fзавершил главу &e" + chapter + " «" + catalog.chapterName(chapter) + "»";
         if (getConfig().getBoolean("milestones.broadcast-chapters", true)) Bukkit.broadcastMessage(color(prefix() + text));
         if (player != null && getConfig().getBoolean("milestones.title-chapters", true))
-            player.sendTitle(color("&6&lГлава " + chapter + " завершена"), color("&eОсобая награда уже ждёт"), 10, 70, 20);
+            player.sendTitle(color("&6&lГлава " + chapter + " завершена"), color("&eОсобая награда получена"), 10, 70, 20);
     }
 
     public void processPending(Player player) {
@@ -217,8 +242,8 @@ public final class TurnoQuests extends JavaPlugin {
 
     public void markDeath(Player player) { PlayerData data = data(player); data.diedDuringQuest = true; trySave(data); }
 
-    public void open(Player player) { checkCurrentState(player); processPending(player); gui.openMain(player); }
-    public void openChapter(Player player, int chapter) { checkCurrentState(player); processPending(player); gui.openChapter(player, Math.max(1, Math.min(10, chapter))); }
+    public void open(Player player) { checkCurrentState(player); gui.openMain(player); }
+    public void openChapter(Player player, int chapter) { checkCurrentState(player); gui.openChapter(player, Math.max(1, Math.min(10, chapter))); }
 
     public void checkCurrentState(Player player) {
         PlayerData data = data(player);
@@ -334,7 +359,9 @@ public final class TurnoQuests extends JavaPlugin {
             PlayerData data = data(player);
             if (!data.tracker || data.finished()) continue;
             QuestDefinition q = catalog.get(data.currentQuest);
-            String bar = color("&6Квест #" + q.id() + " &8• &f" + q.name() + " &8[&e" + data.progress + "&7/&e" + q.required() + "&8]");
+            String bar = data.rewardReady(q)
+                    ? color("&a&lНаграда готова! &fОткройте &e/quests &fи нажмите зелёную кнопку")
+                    : color("&6Квест #" + q.id() + " &8• &f" + q.name() + " &8[&e" + data.progress + "&7/&e" + q.required() + "&8]");
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(bar));
         }
     }
