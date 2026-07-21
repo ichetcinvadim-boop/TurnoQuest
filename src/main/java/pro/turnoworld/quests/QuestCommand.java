@@ -126,7 +126,7 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
         plugin.store().audit(sender.getName(), reward ? "COMPLETE" : "SKIP", data, "quest=" + quest + ", reward=" + reward);
         if (reward && plugin.online(data) == null) plugin.rewards().claim(data, null, plugin.catalog());
         plugin.trySave(data);
-        sender.sendMessage(plugin.color(plugin.prefix() + "&aКвест #" + quest + " для " + data.lastName + (reward ? " завершён с наградой." : " пропущен без награды.")));
+        sender.sendMessage(plugin.color(plugin.prefix() + "&aКвест #" + quest + " для " + data.lastName + (reward ? " выполнен — награда ждёт на зелёной кнопке." : " пропущен без награды.")));
     }
 
     private void reset(CommandSender sender, PlayerData data, String[] args) {
@@ -223,7 +223,7 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
     }
 
     private void help(CommandSender sender) {
-        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.2.1"));
+        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.3.0"));
         sender.sendMessage(plugin.color("&e/quests [1-10] &7— меню или глава"));
         sender.sendMessage(plugin.color("&e/tq info <игрок|UUID> &7— офлайн-информация"));
         sender.sendMessage(plugin.color("&e/tq skip|complete <игрок|UUID> [квест]"));
