@@ -33,16 +33,16 @@ jobs:
       - name: Prepare downloads
         run: |
           mkdir -p release
-          cp target/turnoquests-1.2.1.jar release/TurnoQuests-1.2.1.jar
-          zip -j release/TurnoQuests-1.2.1-package.zip release/TurnoQuests-1.2.1.jar README.md TEST-REPORT.md
-          sha256sum release/TurnoQuests-1.2.1.jar release/TurnoQuests-1.2.1-package.zip > release/SHA256-1.2.1.txt
+          cp target/turnoquests-1.3.0.jar release/TurnoQuests-1.3.0.jar
+          zip -j release/TurnoQuests-1.3.0-package.zip release/TurnoQuests-1.3.0.jar README.md TEST-REPORT.md
+          sha256sum release/TurnoQuests-1.3.0.jar release/TurnoQuests-1.3.0-package.zip > release/SHA256-1.3.0.txt
 
       - name: Upload verified downloads
         uses: actions/upload-artifact@v4
         with:
-          name: TurnoQuests-1.2.1
+          name: TurnoQuests-1.3.0
           path: |
-            release/TurnoQuests-1.2.1.jar
-            release/TurnoQuests-1.2.1-package.zip
-            release/SHA256-1.2.1.txt
+            release/TurnoQuests-1.3.0.jar
+            release/TurnoQuests-1.3.0-package.zip
+            release/SHA256-1.3.0.txt
           if-no-files-found: error
