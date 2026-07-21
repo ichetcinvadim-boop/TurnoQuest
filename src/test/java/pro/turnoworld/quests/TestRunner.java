@@ -91,8 +91,10 @@ public final class TestRunner {
         check(partial.changed() && !partial.completed() && p.progress == 5, "partial progress");
         ProgressOutcome done = engine.add(p, first, QuestType.BREAK, "OAK_LOG", 999, System.currentTimeMillis());
         check(done.completed() && p.progress == first.required(), "completion caps");
+        check(p.currentQuest == 1 && p.rewardReady(first), "completion waits for reward click");
         engine.advance(p, first, System.currentTimeMillis());
         check(p.currentQuest == 2 && p.highestCompleted == 1 && p.progress == 0, "advance exact");
+        check(!p.rewardReady(first), "claimed quest no longer ready");
         check(!engine.add(p, first, QuestType.BREAK, "OAK_LOG", 1, System.currentTimeMillis()).changed(), "old quest locked");
         p.rewardedQuests.add(1); p.rewardedChapters.add(1); p.rewardedBonuses.add(1);
         engine.setQuest(p, 54);
@@ -119,7 +121,7 @@ public final class TestRunner {
         UUID id = UUID.randomUUID();
         PlayerData data = store.getOrCreate(id, "OfflineTester");
         data.currentQuest = 54; data.progress = 17; data.highestCompleted = 53; data.lifetimeHighest = 80; data.prestige = 2;
-        data.rewardedQuests.addAll(List.of(1, 2, 10)); data.rewardedBonuses.add(10); data.pendingItems.add(5); data.claimedSecrets.add("miner-10000");
+        data.rewardedQuests.addAll(List.of(1, 2, 10)); data.rewardedBonuses.add(10); data.pendingMoney.addAll(List.of(10, -10)); data.pendingItems.add(5); data.claimedSecrets.add("miner-10000");
         store.save(data);
         PlayerData loaded = new FileStore(dir).find("OfflineTester").orElseThrow();
         check(loaded.uuid.equals(id), "offline UUID load");
@@ -127,6 +129,7 @@ public final class TestRunner {
         check(loaded.highestCompleted == 53 && loaded.lifetimeHighest == 80, "milestones load");
         check(loaded.prestige == 2, "prestige load");
         check(loaded.rewardedQuests.size() == 3 && loaded.rewardedBonuses.contains(10), "reward ledger load");
+        check(loaded.pendingMoney.contains(10) && loaded.pendingMoney.contains(-10), "pending money survives restart");
         check(loaded.pendingItems.contains(5) && loaded.claimedSecrets.contains("miner-10000"), "pending and secrets load");
         check(new FileStore(dir).find(id.toString()).isPresent(), "offline UUID lookup");
         store.audit("Console", "RESET", data, "from=54,to=34");
@@ -168,8 +171,13 @@ public final class TestRunner {
         String plugin = Files.readString(project.resolve("src/main/resources/plugin.yml"));
         String config = Files.readString(project.resolve("src/main/resources/config.yml"));
         String quests = Files.readString(project.resolve("src/main/resources/quests.yml"));
+        String gui = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/QuestGui.java"));
+        String core = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/TurnoQuests.java"));
         check(plugin.contains("api-version: '1.21'"), "api version");
-        check(plugin.contains("version: 1.2.1"), "plugin version");
+        check(plugin.contains("version: 1.3.0"), "plugin version");
+        check(gui.contains("Material.RED_DYE") && gui.contains("Material.LIME_DYE"), "red and green reward button states");
+        check(gui.contains("claimQuestReward(player") && core.contains("public synchronized boolean claimQuestReward"), "manual reward click wired");
+        check(core.contains("Откройте /quests и нажмите зелёную кнопку"), "completion explains manual claim");
         check(config.contains("glowing: true"), "npc visibility default");
         check(plugin.contains("turnoquests.admin.reset") && plugin.contains("turnoquests.admin.reward"), "permissions documented");
         check(plugin.contains("aliases: [tq]"), "tq alias");
