@@ -46,6 +46,10 @@ public final class PlayerData {
 
     public boolean finished() { return currentQuest > 100; }
 
+    public boolean rewardReady(QuestDefinition quest) {
+        return quest != null && currentQuest == quest.id() && progress >= quest.required();
+    }
+
     public Properties toProperties() {
         Properties p = new Properties();
         p.setProperty("uuid", uuid.toString());
