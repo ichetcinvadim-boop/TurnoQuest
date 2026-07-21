@@ -1,0 +1,2 @@
+d03f7abfd91ac147b591d66aafb733ae9a83753018f920b5a607b2fbfeb1ff15  TurnoQuests-1.3.0.jar
+1e574e9fbe3dcc36c29ba57d1c332beafb4cee342274b4016f6d69df2e7a5246  TurnoQuests-1.3.0-package.zip
