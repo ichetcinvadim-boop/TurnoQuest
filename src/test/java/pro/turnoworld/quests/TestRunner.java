@@ -173,8 +173,12 @@ public final class TestRunner {
         String quests = Files.readString(project.resolve("src/main/resources/quests.yml"));
         String gui = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/QuestGui.java"));
         String core = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/TurnoQuests.java"));
+        String command = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/QuestCommand.java"));
+        String npc = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/QuestNpcService.java"));
+        String workflow = Files.readString(project.resolve(".github/workflows/build.yml"));
+        String pom = Files.readString(project.resolve("pom.xml"));
         check(plugin.contains("api-version: '1.21'"), "api version");
-        check(plugin.contains("version: 1.3.0"), "plugin version");
+        check(plugin.contains("version: 1.3.1"), "plugin version");
         check(gui.contains("Material.RED_DYE") && gui.contains("Material.LIME_DYE"), "red and green reward button states");
         check(gui.contains("claimQuestReward(player") && core.contains("public synchronized boolean claimQuestReward"), "manual reward click wired");
         check(core.contains("Откройте /quests и нажмите зелёную кнопку"), "completion explains manual claim");
@@ -190,6 +194,17 @@ public final class TestRunner {
         check(!quests.contains("MYTHIC_KILL") && !quests.toLowerCase().contains("boss") && !quests.toLowerCase().contains("босс"), "no boss quests");
         check(quests.contains("MINECRAFT:NETHER/ALL_EFFECTS") && quests.contains("MINECRAFT:END/RESPAWN_DRAGON"), "vanilla final objectives");
         check(quests.contains("luk_astralnogo_shtorma") && quests.contains("09_krylya_arhangela"), "first and final item rewards");
+        for (String sub : List.of("menu", "tracker", "prestige", "help", "reload", "validate", "backup", "top", "global", "npc",
+                "info", "skip", "complete", "reset", "set", "progress", "reward", "history"))
+            check(command.contains("\"" + sub + "\""), "command route " + sub);
+        check(command.contains("catch (Throwable error)") && command.contains("Level.SEVERE"), "commands log complete failures");
+        check(core.contains("catch (Throwable error)") && core.contains("disablePlugin(this)"), "startup failure is logged and disabled safely");
+        check(npc.contains("spawnEntity") && npc.contains("catch (Throwable e)"), "npc spawn failure is fully logged");
+        check(pom.contains("paper-api") && pom.contains("<version>1.3.1</version>"), "real Paper API build");
+        check(pom.contains("org.ow2.asm") && workflow.contains("AbiVerifier"), "runtime ABI verification enabled");
+        check(workflow.contains("pull_request:") && workflow.contains("dependency:build-classpath"), "CI checks every pull request with dependencies");
+        for (String forbidden : List.of("build-support/stubs", "jar-stage", "api-stub-classes"))
+            check(!workflow.contains(forbidden), "release never builds with stubs: " + forbidden);
     }
 
     private static void check(boolean condition, String name) {
