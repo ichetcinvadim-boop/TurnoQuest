@@ -1,3 +1,3 @@
-19d57ab1fc261ee1161f96bc9d5d0835a9d176ff3f74162c9d79f2c849dff2e6  dist/TurnoQuests-1.4.0.jar
-819c658b26a50ef291c93e1bec813fc805d65ebe4f098da795fa73cb98134916  dist/TurnoQuests-1.4.0-package.zip
-7836304bae50233ea7e00fe851071f5360d232418b192ea41058d02cfed19f51  dist/TurnoQuests-1.4.0-source.zip
+5e0537e9baa4dcfd349d5d661c53aa5e94dae757eef92352735678e03d4b31ce  TurnoQuests-1.4.0.jar
+a2de98b4453ba2763cdc5c963b2951404357fede551b20f75f6fee55e7587bd9  TurnoQuests-1.4.0-package.zip
+14eb83a4f9bd18ff5ee5b97362b2f6a1bb87ee02f61eb9a76c8b8e666fb7561b  TurnoQuests-1.4.0-source.zip
