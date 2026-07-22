@@ -31,7 +31,14 @@ gui:
 
 tracker:
   enabled: true
-  interval-ticks: 40
+  # Трекер появляется только после подходящего действия и сам исчезает.
+  interval-ticks: 10
+  active-seconds: 5
+  reward-seconds: 10
+  suppress-in-pvp: true
+  pvp-placeholder: "%combatlogx_tag_count%"
+  suppress-in-events: true
+  event-placeholder: "%turnoevents_joined%"
 
 anti-exploit:
   ignore-creative: true

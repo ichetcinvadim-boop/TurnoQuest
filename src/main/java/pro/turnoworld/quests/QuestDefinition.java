@@ -1,6 +1,7 @@
 package pro.turnoworld.quests;
 
 import java.util.List;
+import java.util.Set;
 
 public record QuestDefinition(
         int id,
@@ -18,6 +19,10 @@ public record QuestDefinition(
         double bonusMoney,
         String icon
 ) {
+    private static final Set<String> WOODEN_TOOLS = Set.of(
+            "WOODEN_SWORD", "WOODEN_PICKAXE", "WOODEN_AXE", "WOODEN_SHOVEL", "WOODEN_HOE"
+    );
+
     public QuestDefinition {
         description = List.copyOf(description);
         target = target == null ? "ANY" : target.toUpperCase();
@@ -30,6 +35,7 @@ public record QuestDefinition(
 
     public boolean matches(String value) {
         if ("ANY".equals(target) || target.equalsIgnoreCase(value)) return true;
+        if ("WOODEN_TOOL".equals(target)) return WOODEN_TOOLS.contains(value.toUpperCase());
         // Vanilla ores have stone and deepslate variants; both count toward the same
         // mining objective without making administrators duplicate every target.
         return target.endsWith("_ORE") && ("DEEPSLATE_" + target).equalsIgnoreCase(value);

@@ -13,7 +13,7 @@ chapters:
 quests:
   1: {name: "Первое дерево", description: "Добудьте дубовые брёвна", type: BREAK, target: OAK_LOG, required: 16, money: 500, icon: OAK_LOG}
   2: {name: "Своя мастерская", description: "Создайте верстак", type: CRAFT, target: CRAFTING_TABLE, required: 1, money: 500, icon: CRAFTING_TABLE}
-  3: {name: "Первый инструмент", description: "Создайте деревянную кирку", type: CRAFT, target: WOODEN_PICKAXE, required: 1, money: 600, icon: WOODEN_PICKAXE}
+  3: {name: "Первый инструмент", description: "Создайте любой деревянный инструмент", type: CRAFT, target: WOODEN_TOOL, required: 1, money: 600, icon: WOODEN_PICKAXE}
   4: {name: "Каменный запас", description: "Добудьте булыжник", type: BREAK, target: STONE, required: 32, money: 700, icon: COBBLESTONE}
   5: {name: "Горячее начало", description: "Создайте печь", type: CRAFT, target: FURNACE, required: 1, money: 700, icon: FURNACE}
   6: {name: "Железный век", description: "Переплавьте железо", type: SMELT, target: IRON_INGOT, required: 8, money: 900, icon: IRON_INGOT}

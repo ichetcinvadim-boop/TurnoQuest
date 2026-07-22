@@ -1,11 +1,11 @@
 name: TurnoQuests
-version: 1.3.1
+version: 1.4.0
 main: pro.turnoworld.quests.TurnoQuests
 api-version: '1.21'
 author: TurnoWorld
 description: Последовательная система из 100 квестов для TurnoWorld
 depend: [Vault]
-softdepend: [ExecutableItems]
+softdepend: [ExecutableItems, PlaceholderAPI, CombatLogX, TurnoEvents]
 commands:
   quests:
     description: Открыть меню квестов

@@ -37,6 +37,7 @@ public final class TestRunner {
             if (id % 10 == 0) check(!q.rewardItem().isBlank(), "chapter reward " + id);
         }
         engineTests(quests);
+        presentationTests(quests);
         persistenceTests();
         rotationTests();
         resourceTests(project);
@@ -108,10 +109,35 @@ public final class TestRunner {
             PlayerData one = new PlayerData(UUID.randomUUID(), "P" + id);
             engine.setQuest(one, id);
             QuestDefinition q = quests.get(id);
-            ProgressOutcome result = engine.add(one, q, q.type(), q.target(), q.required(), System.currentTimeMillis());
+            ProgressOutcome result = engine.add(one, q, q.type(), sampleTarget(q), q.required(), System.currentTimeMillis());
             check(result.completed(), "every quest completable " + id);
             engine.advance(one, q, System.currentTimeMillis());
             check(one.currentQuest == id + 1, "every quest advances " + id);
+        }
+    }
+
+    private static String sampleTarget(QuestDefinition quest) {
+        return "WOODEN_TOOL".equals(quest.target()) ? "WOODEN_AXE" : quest.target();
+    }
+
+    private static void presentationTests(Map<Integer, QuestDefinition> quests) {
+        QuestDefinition wooden = quests.get(3);
+        check("WOODEN_TOOL".equals(wooden.target()), "wooden tool group configured");
+        for (String tool : List.of("WOODEN_SWORD", "WOODEN_PICKAXE", "WOODEN_AXE", "WOODEN_SHOVEL", "WOODEN_HOE"))
+            check(wooden.matches(tool), "wooden tool accepted " + tool);
+        check(!wooden.matches("STONE_PICKAXE"), "non-wooden tool rejected");
+        check(QuestText.instruction(wooden).contains("любой деревянный инструмент"), "clear wooden tool instruction");
+        check(QuestText.targetHint(wooden).contains("меч") && QuestText.targetHint(wooden).contains("мотыга"), "wooden tool choices explained");
+        check(QuestText.progressBar(0, 10).contains("■■■■■■■■■■"), "empty progress bar");
+        check(QuestText.progressBar(5, 10).startsWith("&a■■■■■"), "half progress bar");
+        check(QuestText.progressBar(10, 10).startsWith("&a■■■■■■■■■■"), "full progress bar");
+        check(QuestText.formatDuration(65).equals("01:05"), "short duration formatting");
+        check(QuestText.formatDuration(3661).equals("01:01:01"), "long duration formatting");
+        for (QuestDefinition quest : quests.values()) {
+            check(!QuestText.instruction(quest).isBlank(), "instruction visible " + quest.id());
+            check(!QuestText.actionName(quest.type()).isBlank(), "action visible " + quest.id());
+            check(!QuestText.targetHint(quest).isBlank(), "target hint visible " + quest.id());
+            check(!QuestText.amount(quest).isBlank(), "amount visible " + quest.id());
         }
     }
 
@@ -175,10 +201,12 @@ public final class TestRunner {
         String core = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/TurnoQuests.java"));
         String command = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/QuestCommand.java"));
         String npc = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/QuestNpcService.java"));
+        String listener = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/QuestListener.java"));
+        String context = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/TrackerContext.java"));
         String workflow = Files.readString(project.resolve(".github/workflows/build.yml"));
         String pom = Files.readString(project.resolve("pom.xml"));
         check(plugin.contains("api-version: '1.21'"), "api version");
-        check(plugin.contains("version: 1.3.1"), "plugin version");
+        check(plugin.contains("version: 1.4.0"), "plugin version");
         check(gui.contains("Material.RED_DYE") && gui.contains("Material.LIME_DYE"), "red and green reward button states");
         check(gui.contains("claimQuestReward(player") && core.contains("public synchronized boolean claimQuestReward"), "manual reward click wired");
         check(core.contains("Откройте /quests и нажмите зелёную кнопку"), "completion explains manual claim");
@@ -189,18 +217,26 @@ public final class TestRunner {
         check(config.contains("ignore-player-placed-blocks: true") && config.contains("ignore-spawner-and-egg-mobs: true"), "anti exploit defaults");
         check(config.contains("npc:") && config.contains("entity-type: VILLAGER"), "built-in npc defaults");
         check(!config.contains("bosses:") && !config.toLowerCase().contains("arena"), "no boss arenas");
-        check(!plugin.contains("MythicMobs") && !plugin.contains("Citizens") && !plugin.contains("PlaceholderAPI"), "no unrelated soft dependencies");
+        check(!plugin.contains("MythicMobs") && !plugin.contains("Citizens"), "no unrelated soft dependencies");
+        check(plugin.contains("PlaceholderAPI") && plugin.contains("CombatLogX") && plugin.contains("TurnoEvents"), "context integrations load after dependencies");
         check(!config.toLowerCase().contains("shard") && !config.toLowerCase().contains("playerpoints"), "no shards");
         check(!quests.contains("MYTHIC_KILL") && !quests.toLowerCase().contains("boss") && !quests.toLowerCase().contains("босс"), "no boss quests");
         check(quests.contains("MINECRAFT:NETHER/ALL_EFFECTS") && quests.contains("MINECRAFT:END/RESPAWN_DRAGON"), "vanilla final objectives");
         check(quests.contains("luk_astralnogo_shtorma") && quests.contains("09_krylya_arhangela"), "first and final item rewards");
+        check(quests.contains("target: WOODEN_TOOL") && quests.contains("Создайте любой деревянный инструмент"), "clear wooden tool quest");
+        check(gui.contains("ЧТО НУЖНО СДЕЛАТЬ") && gui.contains("QuestText.progressBar") && !gui.contains("q.target()"), "clear quest report without raw enum target");
+        check(core.contains("trackerActivityUntil") && core.contains("signalQuestAction") && core.contains("trackerContext.suppressed"), "contextual tracker lifecycle");
+        check(listener.contains("BlockDamageEvent") && listener.contains("QuestType.KILL") && listener.contains("PlayerFishEvent.State.FISHING"), "tracker starts on real quest actions");
+        check(context.contains("%combatlogx_tag_count%") && context.contains("%turnoevents_joined%")
+                && context.contains("Double.parseDouble") && context.contains("value.equals(\"true\")"), "pvp and event suppression");
+        check(config.contains("active-seconds: 5") && config.contains("suppress-in-pvp: true") && config.contains("suppress-in-events: true"), "contextual tracker defaults");
         for (String sub : List.of("menu", "tracker", "prestige", "help", "reload", "validate", "backup", "top", "global", "npc",
                 "info", "skip", "complete", "reset", "set", "progress", "reward", "history"))
             check(command.contains("\"" + sub + "\""), "command route " + sub);
         check(command.contains("catch (Throwable error)") && command.contains("Level.SEVERE"), "commands log complete failures");
         check(core.contains("catch (Throwable error)") && core.contains("disablePlugin(this)"), "startup failure is logged and disabled safely");
         check(npc.contains("spawnEntity") && npc.contains("catch (Throwable e)"), "npc spawn failure is fully logged");
-        check(pom.contains("paper-api") && pom.contains("<version>1.3.1</version>"), "real Paper API build");
+        check(pom.contains("paper-api") && pom.contains("<version>1.4.0</version>"), "real Paper API build");
         check(pom.contains("org.ow2.asm") && workflow.contains("AbiVerifier"), "runtime ABI verification enabled");
         check(workflow.contains("pull_request:") && workflow.contains("dependency:build-classpath"), "CI checks every pull request with dependencies");
         for (String forbidden : List.of("build-support/stubs", "jar-stage", "api-stub-classes"))
