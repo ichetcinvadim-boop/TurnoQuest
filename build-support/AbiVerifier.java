@@ -114,14 +114,25 @@ public final class AbiVerifier {
 
     private boolean hasMethod(String owner, String signature, Set<String> seen) {
         if (!seen.add(owner)) return false;
+        // Public Object methods are available on every reference value, including
+        // values whose bytecode owner is an interface (for example Bukkit Plugin).
+        // Interfaces do not list java/lang/Object as their superclass, so walking
+        // only the declared hierarchy would incorrectly report these calls missing.
+        if (isPublicObjectMethod(signature)) return true;
         Info info = classes.get(owner);
         if (info == null) return false;
         if (info.methods.contains(signature)) return true;
         if ("java/lang/Enum".equals(info.superName) && (signature.equals("name()Ljava/lang/String;") || signature.equals("ordinal()I") || signature.equals("toString()Ljava/lang/String;"))) return true;
-        if ("java/lang/Object".equals(info.superName) && (signature.equals("toString()Ljava/lang/String;") || signature.equals("hashCode()I") || signature.equals("equals(Ljava/lang/Object;)Z"))) return true;
         if (info.superName != null && hasMethod(info.superName, signature, seen)) return true;
         for (String parent : info.interfaces) if (hasMethod(parent, signature, seen)) return true;
         return false;
+    }
+
+    private boolean isPublicObjectMethod(String signature) {
+        return signature.equals("getClass()Ljava/lang/Class;")
+                || signature.equals("toString()Ljava/lang/String;")
+                || signature.equals("hashCode()I")
+                || signature.equals("equals(Ljava/lang/Object;)Z");
     }
 
     private boolean hasField(String owner, String signature, Set<String> seen) {

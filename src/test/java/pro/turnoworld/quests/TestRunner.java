@@ -205,6 +205,7 @@ public final class TestRunner {
         String context = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/TrackerContext.java"));
         String workflow = Files.readString(project.resolve(".github/workflows/build.yml"));
         String pom = Files.readString(project.resolve("pom.xml"));
+        String abiVerifier = Files.readString(project.resolve("build-support/AbiVerifier.java"));
         check(plugin.contains("api-version: '1.21'"), "api version");
         check(plugin.contains("version: 1.4.0"), "plugin version");
         check(gui.contains("Material.RED_DYE") && gui.contains("Material.LIME_DYE"), "red and green reward button states");
@@ -238,6 +239,8 @@ public final class TestRunner {
         check(npc.contains("spawnEntity") && npc.contains("catch (Throwable e)"), "npc spawn failure is fully logged");
         check(pom.contains("paper-api") && pom.contains("<version>1.4.0</version>"), "real Paper API build");
         check(pom.contains("org.ow2.asm") && workflow.contains("AbiVerifier"), "runtime ABI verification enabled");
+        check(abiVerifier.contains("isPublicObjectMethod(signature)")
+                && abiVerifier.contains("getClass()Ljava/lang/Class;"), "ABI verifier accepts Object methods on interfaces");
         check(workflow.contains("pull_request:") && workflow.contains("dependency:build-classpath"), "CI checks every pull request with dependencies");
         for (String forbidden : List.of("build-support/stubs", "jar-stage", "api-stub-classes"))
             check(!workflow.contains(forbidden), "release never builds with stubs: " + forbidden);
