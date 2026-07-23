@@ -42,13 +42,14 @@ public final class TestRunner {
             totalShards += q.shards();
             if (q.required() >= 64 || q.type() == QuestType.ADVANCEMENT) substantial++;
         }
-        check(totalMoney >= 150000 && totalMoney <= 300000, "season money stays modest");
-        check(totalShards >= 200 && totalShards <= 300, "season shards stay modest");
+        check(totalMoney == 300000, "season money total");
+        check(totalShards == 9700, "season shard total");
         check(substantial >= 75, "season quests require sustained play");
         check(quests.get(1).required() >= 128, "first quest is easy but not instant");
         check(quests.get(94).required() >= 1000000, "late travel quest is legendary");
         check(quests.get(100).shards() > quests.get(10).shards(), "final reward exceeds first chapter");
         int previousChapterShards = 0;
+        double previousChapterMoney = 0;
         for (int chapter = 1; chapter <= 10; chapter++) {
             int from = (chapter - 1) * 10 + 1;
             int chapterShards = 0;
@@ -58,8 +59,10 @@ public final class TestRunner {
                 chapterMoney += quests.get(id).money();
             }
             check(chapterShards >= previousChapterShards, "chapter shard progression " + chapter);
-            check(chapterMoney > 0, "chapter money " + chapter);
+            check(chapterMoney > previousChapterMoney, "chapter money progression " + chapter);
+            if (chapter == 1) check(chapterShards == 500, "first chapter gives 500 shards");
             previousChapterShards = chapterShards;
+            previousChapterMoney = chapterMoney;
         }
         engineTests(quests);
         presentationTests(quests);
@@ -240,7 +243,7 @@ public final class TestRunner {
         String pom = Files.readString(project.resolve("pom.xml"));
         String abiVerifier = Files.readString(project.resolve("build-support/AbiVerifier.java"));
         check(plugin.contains("api-version: '1.21'"), "api version");
-        check(plugin.contains("version: 1.5.0"), "plugin version");
+        check(plugin.contains("version: 1.5.1"), "plugin version");
         check(gui.contains("Material.RED_DYE") && gui.contains("Material.LIME_DYE"), "red and green reward button states");
         check(gui.contains("claimQuestReward(player") && core.contains("public synchronized boolean claimQuestReward"), "manual reward click wired");
         check(core.contains("Откройте /quests и нажмите зелёную кнопку"), "completion explains manual claim");
@@ -258,7 +261,8 @@ public final class TestRunner {
         check(!plugin.contains("ExecutableItems") && !config.contains("executable-items:"), "item reward dependency removed");
         check(!quests.contains("reward:"), "quest file has no item rewards");
         check(gui.contains("quest.shards()") && gui.contains("Получено осколков"), "shards visible in GUI");
-        check(core.contains("rewards.shardsAvailable()") && core.contains("quests-before-1.5.0.yml"), "shard validation and migration");
+        check(core.contains("rewards.shardsAvailable()") && core.contains("quests-before-1.5.1.yml"), "shard validation and migration");
+        check(quests.contains("season-version: 1.5.1"), "season balance version");
         String rewardService = Files.readString(project.resolve("src/main/java/pro/turnoworld/quests/RewardService.java"));
         check(rewardService.contains("getMethod(\"give\", java.util.UUID.class, int.class)"), "PlayerPoints UUID API integration");
         check(rewardService.contains("data.pendingShards") && rewardService.contains("data.shardsEarned"), "shard queue is durable");
@@ -278,7 +282,7 @@ public final class TestRunner {
         check(command.contains("catch (Throwable error)") && command.contains("Level.SEVERE"), "commands log complete failures");
         check(core.contains("catch (Throwable error)") && core.contains("disablePlugin(this)"), "startup failure is logged and disabled safely");
         check(npc.contains("spawnEntity") && npc.contains("catch (Throwable e)"), "npc spawn failure is fully logged");
-        check(pom.contains("paper-api") && pom.contains("<version>1.5.0</version>"), "real Paper API build");
+        check(pom.contains("paper-api") && pom.contains("<version>1.5.1</version>"), "real Paper API build");
         check(pom.contains("org.ow2.asm") && workflow.contains("AbiVerifier"), "runtime ABI verification enabled");
         check(abiVerifier.contains("isPublicObjectMethod(signature)")
                 && abiVerifier.contains("getClass()Ljava/lang/Class;"), "ABI verifier accepts Object methods on interfaces");

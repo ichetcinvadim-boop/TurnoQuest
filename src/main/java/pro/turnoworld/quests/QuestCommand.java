@@ -234,7 +234,7 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
     }
 
     private void help(CommandSender sender) {
-        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.5.0"));
+        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.5.1"));
         sender.sendMessage(plugin.color("&e/quests [1-10] &7— меню или глава"));
         sender.sendMessage(plugin.color("&e/tq info <игрок|UUID> &7— офлайн-информация"));
         sender.sendMessage(plugin.color("&e/tq skip|complete <игрок|UUID> [квест]"));

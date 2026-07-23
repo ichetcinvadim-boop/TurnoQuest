@@ -118,13 +118,13 @@ public final class TurnoQuests extends JavaPlugin {
                 getLogger().info("Старые квесты с боссами сохранены в quests-before-1.2.0.yml и заменены новой цепочкой.");
                 text = Files.readString(quests.toPath());
             }
-            if (!text.contains("shards:")) {
-                Files.copy(quests.toPath(), new File(getDataFolder(), "quests-before-1.5.0.yml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            if (!text.contains("season-version: 1.5.1")) {
+                Files.copy(quests.toPath(), new File(getDataFolder(), "quests-before-1.5.1.yml").toPath(), StandardCopyOption.REPLACE_EXISTING);
                 saveResource("quests.yml", true);
-                getLogger().info("Квесты 1.4.x сохранены в quests-before-1.5.0.yml и заменены долгой сезонной цепочкой 1.5.0.");
+                getLogger().info("Предыдущая цепочка сохранена в quests-before-1.5.1.yml и заменена сезонной цепочкой с новым балансом.");
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Не удалось обновить quests.yml до 1.5.0", e);
+            throw new IllegalStateException("Не удалось обновить quests.yml до 1.5.1", e);
         }
         migrateWoodenToolQuest(quests);
         if (getConfig().contains("bosses") || getConfig().contains("citizens")) {
