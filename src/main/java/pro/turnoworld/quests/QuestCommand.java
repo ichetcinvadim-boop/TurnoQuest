@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.logging.Level;
 
 public final class QuestCommand implements CommandExecutor, TabCompleter {
     private final TurnoQuests plugin;
@@ -20,6 +21,15 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        try { return execute(sender, command, label, args); }
+        catch (Throwable error) {
+            plugin.getLogger().log(Level.SEVERE, "Ошибка команды /" + label + " " + String.join(" ", args), error);
+            sender.sendMessage(plugin.color(plugin.prefix() + "&cОшибка команды записана в консоль. Код: &f" + error.getClass().getSimpleName()));
+            return true;
+        }
+    }
+
+    private boolean execute(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("quests")) return playerCommand(sender, args);
         if (args.length == 0) { help(sender); return true; }
         String sub = args[0].toLowerCase(Locale.ROOT);
@@ -111,7 +121,8 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(plugin.color("&6TurnoQuests: &f" + d.lastName + " &8(" + d.uuid + ")"));
         sender.sendMessage(plugin.color("&7Текущий квест: &e" + d.currentQuest + " &7прогресс: &e" + d.progress));
         sender.sendMessage(plugin.color("&7Пройдено: &f" + d.highestCompleted + " &7лучший результат: &f" + d.lifetimeHighest + " &7престиж: &f" + d.prestige));
-        sender.sendMessage(plugin.color("&7Ожидают: &f" + d.pendingMoney.size() + " денежных, " + d.pendingItems.size() + " предметных наград"));
+        sender.sendMessage(plugin.color("&7Ожидают: &f" + d.pendingMoney.size() + " денежных, " + d.pendingShards.size() + " наград осколками"));
+        sender.sendMessage(plugin.color("&7Всего получено: &e" + d.moneyEarned + " монет &7и &d" + d.shardsEarned + " осколков"));
     }
 
     private void skip(CommandSender sender, PlayerData data, String[] args, boolean reward) {
@@ -173,13 +184,13 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
         if (args[2].equalsIgnoreCase("claim")) {
             List<String> result = plugin.rewards().claim(data, plugin.online(data), plugin.catalog());
             plugin.trySave(data);
-            sender.sendMessage(plugin.color(plugin.prefix() + (result.isEmpty() ? "&eНет доступных наград или предмет ждёт входа игрока." : "&aОбработано: " + result.size())));
+            sender.sendMessage(plugin.color(plugin.prefix() + (result.isEmpty() ? "&eНет доступных наград либо Vault/PlayerPoints временно недоступен." : "&aОбработано: " + result.size())));
             return;
         }
         if (!args[2].equalsIgnoreCase("reopen") || args.length < 4) { sender.sendMessage("/tq reward <игрок> reopen <квест>"); return; }
         int quest = validQuest(sender, args[3]); if (quest < 1) return;
         data.pendingMoney.add(quest);
-        if (quest % 10 == 0) data.pendingItems.add(quest / 10);
+        data.pendingShards.add(quest);
         plugin.store().audit(sender.getName(), "REWARD_REOPEN", data, "quest=" + quest + ", DANGEROUS=true");
         plugin.trySave(data);
         sender.sendMessage(plugin.color(plugin.prefix() + "&cНаграда #" + quest + " повторно открыта для " + data.lastName + ". Действие записано."));
@@ -223,7 +234,7 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
     }
 
     private void help(CommandSender sender) {
-        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.3.0"));
+        sender.sendMessage(plugin.color("&6&lTurnoQuests &f1.5.2"));
         sender.sendMessage(plugin.color("&e/quests [1-10] &7— меню или глава"));
         sender.sendMessage(plugin.color("&e/tq info <игрок|UUID> &7— офлайн-информация"));
         sender.sendMessage(plugin.color("&e/tq skip|complete <игрок|UUID> [квест]"));

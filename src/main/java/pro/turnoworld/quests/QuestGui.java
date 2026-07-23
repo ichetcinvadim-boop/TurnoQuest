@@ -37,8 +37,9 @@ public final class QuestGui {
             lore.add("&7Квесты: &f" + complete + "/10");
             lore.add("&7Статус: " + status);
             lore.add("");
-            lore.add("&7Награда главы:");
-            lore.add("&e" + plugin.catalog().chapterReward(chapter));
+            lore.add("&7Всего за 10 квестов:");
+            lore.add("&e" + plugin.rewards().format(plugin.rewards().questAmount(plugin.catalog().chapterMoney(chapter))) + " монет");
+            lore.add("&d" + plugin.catalog().chapterShards(chapter) + " осколков");
             lore.add("");
             lore.add("&6Нажмите, чтобы открыть");
             inv.setItem(CHAPTER_SLOTS[chapter - 1], item(CHAPTER_ICONS[chapter - 1], "&6&lГлава " + chapter + " &8• &f" + plugin.catalog().chapterName(chapter), lore));
@@ -48,8 +49,8 @@ public final class QuestGui {
         inv.setItem(31, item(current == null ? Material.NETHER_STAR : rewardReady ? Material.LIME_DYE : Material.RED_DYE,
                 current == null ? "&d&lВсе 100 квестов завершены" : rewardReady ? "&a&lНАГРАДА ГОТОВА — КВЕСТ #" + current.id() : "&c&lТекущий квест #" + current.id(),
                 current == null ? List.of("&7Престиж: &f" + data.prestige, "", "&dНажмите для нового престижа") :
-                        List.of("&f" + current.name(), "&7" + current.description().get(0), "", "&7Прогресс: &e" + data.progress + "&7/&e" + current.required(), "&7Глава: &f" + current.chapter(), "",
-                                rewardReady ? "&a&lНажмите, чтобы забрать награду" : "&cСначала выполните квест")));
+                        questLore(current, data, true, rewardReady,
+                                rewardReady ? "&aНаграда готова" : "&eВыполняется")));
         RotatingObjective daily = plugin.rotations().daily();
         RotatingObjective weekly = plugin.rotations().weekly();
         inv.setItem(37, rotating(Material.CLOCK, "&a&lЕжедневное задание", daily, data.dailyProgress, data.dailyClaimed));
@@ -58,11 +59,13 @@ public final class QuestGui {
         inv.setItem(39, item(Material.BEACON, "&b&lОбщая цель сервера", List.of("&7Прогресс: &f" + plugin.global().progress + "/" + globalRequired,
                 "&7Участников: &f" + plugin.global().contributors.size(), "&7Награда участнику: &e" + plugin.getConfig().getDouble("global-weekly.reward-money", 25000))));
         inv.setItem(40, item(Material.ENDER_CHEST, "&d&lСекретные достижения", List.of("&7Открыто: &f" + data.claimedSecrets.size() + "/5", "&8Условия скрыты")));
-        inv.setItem(41, item(data.tracker ? Material.LIME_DYE : Material.GRAY_DYE, "&e&lТрекер: " + (data.tracker ? "&aвключён" : "&cвыключен"), List.of("&7Нажмите для переключения")));
+        inv.setItem(41, item(data.tracker ? Material.LIME_DYE : Material.GRAY_DYE, "&e&lКонтекстный трекер: " + (data.tracker ? "&aвключён" : "&cвыключен"),
+                List.of("&7Появляется снизу только тогда,", "&7когда вы выполняете текущий квест.", "&7В PvP и во время участия", "&7в ивенте трекер скрывается.", "", "&eНажмите для переключения")));
         inv.setItem(42, item(Material.CHEST, "&6&lКак получить награду", List.of("&7Выполните текущий квест.", "&7Красная кнопка станет &aзелёной&7.", "&7Нажмите на неё для получения приза.", "", "&eНажмите, чтобы открыть текущую главу")));
         inv.setItem(49, item(Material.BOOK, "&f&lСтатистика", List.of("&7Пройдено: &f" + data.highestCompleted + "/100", "&7Лучший результат: &f" + data.lifetimeHighest,
                 "&7Престиж: &f" + data.prestige, "&7Сломано блоков: &f" + data.blocksBroken, "&7Побеждено существ: &f" + data.mobsKilled,
-                "&7Пройдено блоков: &f" + data.distanceWalked, "&7Заработано: &e" + data.moneyEarned)));
+                "&7Пройдено блоков: &f" + data.distanceWalked, "&7Заработано: &e" + data.moneyEarned,
+                "&7Получено осколков: &d" + data.shardsEarned)));
         player.openInventory(inv);
     }
 
@@ -81,20 +84,16 @@ public final class QuestGui {
             boolean ready = current && data.rewardReady(q);
             Material icon = locked ? Material.GRAY_DYE : completed ? material(q.icon(), Material.PAPER) : ready ? Material.LIME_DYE : Material.RED_DYE;
             String status = completed ? "&aНаграда получена" : ready ? "&aНаграда готова" : current ? "&cВыполняется" : "&7Заблокирован";
-            List<String> lore = new ArrayList<>();
-            lore.add("&7" + q.description().get(0));
-            lore.add("");
-            lore.add("&7Цель: &f" + q.target());
-            lore.add("&7Количество: &f" + q.required());
-            lore.add("&7Награда: &e" + plugin.rewards().format(plugin.rewards().questAmount(q.money())));
-            if (q.timed()) lore.add("&bБонус за время: &e" + plugin.rewards().format(plugin.rewards().questAmount(q.bonusMoney())));
-            if (q.noDeathBonus()) lore.add("&bБонус без смерти: &e" + plugin.rewards().format(plugin.rewards().questAmount(q.bonusMoney())));
-            lore.add(""); lore.add("&7Статус: " + status);
-            if (current) lore.add("&7Прогресс: &e" + data.progress + "&7/&e" + q.required());
-            if (ready) { lore.add(""); lore.add("&a&lНажмите, чтобы забрать награду"); }
+            List<String> lore = questLore(q, data, current, ready, status);
             inv.setItem(20 + offset, item(icon, "&6#" + q.id() + " &f" + q.name(), lore));
         }
-        inv.setItem(4, item(Material.CHEST, "&6&lНаграда главы", List.of("&e" + plugin.catalog().chapterReward(chapter), "&7Выдаётся только один раз", "&7после десятого квеста главы")));
+        inv.setItem(4, item(Material.CHEST, "&6&lНаграды главы", List.of(
+                "&7За все десять квестов:",
+                "&e" + plugin.rewards().format(plugin.rewards().questAmount(plugin.catalog().chapterMoney(chapter))) + " монет",
+                "&d" + plugin.catalog().chapterShards(chapter) + " осколков",
+                "",
+                "&7Каждая награда забирается",
+                "&7зелёной кнопкой отдельно.")));
         inv.setItem(45, item(Material.ARROW, "&eПредыдущая глава", List.of()));
         inv.setItem(49, item(Material.BARRIER, "&cНазад", List.of("&7Вернуться к главам")));
         inv.setItem(53, item(Material.ARROW, "&eСледующая глава", List.of()));
@@ -141,6 +140,33 @@ public final class QuestGui {
     private ItemStack rotating(Material material, String title, RotatingObjective o, long progress, boolean claimed) {
         return item(material, title, List.of("&f" + o.name(), "&7Прогресс: &e" + Math.min(progress, o.required()) + "&7/&e" + o.required(),
                 "&7Награда: &e" + plugin.rewards().format(o.money()), "&7Статус: " + (claimed ? "&aполучена" : "&eактивно")));
+    }
+
+    private List<String> questLore(QuestDefinition quest, PlayerData data, boolean current, boolean ready, String status) {
+        List<String> lore = new ArrayList<>();
+        lore.add("&e&lЧТО НУЖНО СДЕЛАТЬ");
+        lore.add("&f" + QuestText.instruction(quest));
+        lore.add("");
+        lore.add("&7Тип действия: &f" + QuestText.actionName(quest.type()));
+        lore.add("&7Засчитывается: &f" + QuestText.targetHint(quest));
+        lore.add("&7Нужно: &f" + QuestText.amount(quest));
+        if (current) {
+            lore.add("");
+            lore.add(QuestText.progressBar(data.progress, quest.required()) + " &e" + QuestText.compactProgress(quest, data.progress));
+            if (quest.timed()) {
+                long elapsed = Math.max(0, (System.currentTimeMillis() - data.questStartedAt) / 1000L);
+                long remaining = Math.max(0, quest.timeLimitSeconds() - elapsed);
+                lore.add("&bДо конца бонусного времени: &f" + QuestText.formatDuration(remaining));
+            }
+        }
+        lore.add("");
+        lore.add("&7Валюта: &e" + plugin.rewards().format(plugin.rewards().questAmount(quest.money())));
+        lore.add("&7Осколки: &d" + quest.shards());
+        if (quest.timed()) lore.add("&bБонус за время: &e" + plugin.rewards().format(plugin.rewards().questAmount(quest.bonusMoney())));
+        if (quest.noDeathBonus()) lore.add("&bБонус без смерти: &e" + plugin.rewards().format(plugin.rewards().questAmount(quest.bonusMoney())));
+        lore.add("&7Статус: " + status);
+        if (ready) { lore.add(""); lore.add("&a&lНажмите, чтобы забрать награду"); }
+        return lore;
     }
 
     private void fill(Inventory inventory) {

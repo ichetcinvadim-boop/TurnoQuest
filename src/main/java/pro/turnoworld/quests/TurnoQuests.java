@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public final class TurnoQuests extends JavaPlugin {
@@ -38,9 +38,19 @@ public final class TurnoQuests extends JavaPlugin {
     private QuestGui gui;
     private QuestNpcService npcService;
     private YamlConfiguration messages;
+    private TrackerContext trackerContext;
+    private final Map<UUID, Long> trackerActivityUntil = new ConcurrentHashMap<>();
 
     @Override
     public void onEnable() {
+        try { enablePlugin(); }
+        catch (Throwable error) {
+            getLogger().log(Level.SEVERE, "TurnoQuests не смог включиться. Полная причина:", error);
+            getServer().getPluginManager().disablePlugin(this);
+        }
+    }
+
+    private void enablePlugin() {
         saveDefaultConfig();
         ensureResource("quests.yml");
         ensureResource("messages.yml");
@@ -61,6 +71,7 @@ public final class TurnoQuests extends JavaPlugin {
         reloadQuestFiles();
         gui = new QuestGui(this);
         npcService = new QuestNpcService(this);
+        trackerContext = new TrackerContext(this);
 
         QuestCommand command = new QuestCommand(this);
         bind("quests", command);
@@ -105,10 +116,17 @@ public final class TurnoQuests extends JavaPlugin {
                 Files.copy(quests.toPath(), new File(getDataFolder(), "quests-before-1.2.0.yml").toPath(), StandardCopyOption.REPLACE_EXISTING);
                 saveResource("quests.yml", true);
                 getLogger().info("Старые квесты с боссами сохранены в quests-before-1.2.0.yml и заменены новой цепочкой.");
+                text = Files.readString(quests.toPath());
+            }
+            if (!text.contains("season-version: 1.5.2")) {
+                Files.copy(quests.toPath(), new File(getDataFolder(), "quests-before-1.5.2.yml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                saveResource("quests.yml", true);
+                getLogger().info("Предыдущая цепочка сохранена в quests-before-1.5.2.yml и заменена сезонной цепочкой с новым балансом.");
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Не удалось обновить quests.yml до 1.2.0", e);
+            throw new IllegalStateException("Не удалось обновить quests.yml до 1.5.2", e);
         }
+        migrateWoodenToolQuest(quests);
         if (getConfig().contains("bosses") || getConfig().contains("citizens")) {
             getConfig().set("bosses", null);
             getConfig().set("citizens", null);
@@ -116,11 +134,30 @@ public final class TurnoQuests extends JavaPlugin {
         }
     }
 
+    private void migrateWoodenToolQuest(File quests) {
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(quests);
+        String target = yaml.getString("quests.3.target", "");
+        String description = yaml.getString("quests.3.description", "");
+        if (!target.equalsIgnoreCase("WOODEN_PICKAXE")) return;
+        yaml.set("quests.3.target", "WOODEN_TOOL");
+        if (description.equals("Создайте деревянную кирку"))
+            yaml.set("quests.3.description", "Создайте любой деревянный инструмент");
+        try {
+            yaml.save(quests);
+            getLogger().info("Квест #3 обновлён: теперь засчитывается любой деревянный инструмент.");
+        } catch (IOException error) {
+            throw new IllegalStateException("Не удалось обновить описание квеста #3", error);
+        }
+    }
+
     public synchronized void reloadQuestFiles() {
         reloadConfig();
         messages = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "messages.yml"));
         catalog = QuestCatalog.load(new File(getDataFolder(), "quests.yml"));
-        if (rewards != null) rewards.hookEconomy();
+        if (rewards != null) {
+            rewards.hookEconomy();
+            rewards.hookPlayerPoints();
+        }
     }
 
     public void record(Player player, QuestType type, String target, long amount) {
@@ -139,10 +176,30 @@ public final class TurnoQuests extends JavaPlugin {
         if (!data.finished()) {
             QuestDefinition quest = catalog.get(data.currentQuest);
             ProgressOutcome result = engine.add(data, quest, type, normalized, amount, System.currentTimeMillis());
+            if (result.changed()) activateTracker(player, result.completed());
             if (result.completed()) complete(player, data, quest, result.timedBonus(), result.noDeathBonus(), true);
         }
         // Frequent gameplay events stay in memory; autosave and quit save them atomically.
     }
+
+    /** Shows the contextual tracker when an action has started but progress is not awarded yet. */
+    public void signalQuestAction(Player player, QuestType type, String target) {
+        if (player == null || !eligible(player)) return;
+        PlayerData data = data(player);
+        if (!data.tracker || data.finished()) return;
+        QuestDefinition quest = catalog.get(data.currentQuest);
+        String normalized = target == null ? "ANY" : target.toUpperCase(Locale.ROOT);
+        if (quest.type() == type && quest.matches(normalized) && !data.rewardReady(quest)) activateTracker(player, false);
+    }
+
+    private void activateTracker(Player player, boolean completed) {
+        PlayerData data = data(player);
+        if (!data.tracker) return;
+        double seconds = getConfig().getDouble(completed ? "tracker.reward-seconds" : "tracker.active-seconds", completed ? 10D : 5D);
+        trackerActivityUntil.put(player.getUniqueId(), System.currentTimeMillis() + Math.max(1_000L, Math.round(seconds * 1_000D)));
+    }
+
+    public void forgetTracker(Player player) { if (player != null) trackerActivityUntil.remove(player.getUniqueId()); }
 
     private void updateRotating(Player player, PlayerData data, RotatingObjective objective, boolean daily,
                                 QuestType type, String target, long amount) {
@@ -191,6 +248,7 @@ public final class TurnoQuests extends JavaPlugin {
         }
 
         engine.advance(data, quest, System.currentTimeMillis());
+        trackerActivityUntil.remove(player.getUniqueId());
         if (quest.id() % 10 == 0) announceChapter(player, data, quest.chapter());
         player.sendMessage(color(prefix() + "&aНаграда за квест #" + quest.id() + " получена. Следующий квест открыт!"));
         player.sendTitle(color("&aНаграда получена"), color(data.finished() ? "&dВсе 100 квестов завершены" : "&eОткрыт квест #" + data.currentQuest), 10, 45, 15);
@@ -203,7 +261,7 @@ public final class TurnoQuests extends JavaPlugin {
         String text = "&6&l" + data.lastName + " &fзавершил главу &e" + chapter + " «" + catalog.chapterName(chapter) + "»";
         if (getConfig().getBoolean("milestones.broadcast-chapters", true)) Bukkit.broadcastMessage(color(prefix() + text));
         if (player != null && getConfig().getBoolean("milestones.title-chapters", true))
-            player.sendTitle(color("&6&lГлава " + chapter + " завершена"), color("&eОсобая награда получена"), 10, 70, 20);
+            player.sendTitle(color("&6&lГлава " + chapter + " завершена"), color("&eСезонный путь продолжается"), 10, 70, 20);
     }
 
     public void processPending(Player player) {
@@ -280,28 +338,10 @@ public final class TurnoQuests extends JavaPlugin {
         List<String> errors = new java.util.ArrayList<>(catalog.validate());
         if (!hasPlugin("Vault")) errors.add("Vault не найден: денежные награды останутся в очереди");
         if (!rewards.economyAvailable()) errors.add("Провайдер экономики Vault не найден");
-        if (!hasPlugin("ExecutableItems")) errors.add("ExecutableItems не найден: предметные награды не будут выданы");
+        if (!hasPlugin("PlayerPoints")) errors.add("PlayerPoints не найден: награды осколками останутся в очереди");
+        if (!rewards.shardsAvailable()) errors.add("API PlayerPoints недоступен");
         if (hasPlugin("BetonQuest")) errors.add("BetonQuest включён и может перехватить /quests — удалите его alias или отключите старый плагин");
-        for (int chapter = 1; chapter <= 10; chapter++) if (catalog.chapterReward(chapter).isBlank()) errors.add("Пустой EI reward главы " + chapter);
-        validateExternalIds(errors);
         return errors;
-    }
-
-    private void validateExternalIds(List<String> errors) {
-        File plugins = getDataFolder().getParentFile();
-        Path itemRoot = plugins.toPath().resolve("ExecutableItems").resolve("items");
-        if (Files.isDirectory(itemRoot)) {
-            Set<String> ids = new HashSet<>();
-            try (var paths = Files.walk(itemRoot)) {
-                paths.filter(Files::isRegularFile).map(p -> p.getFileName().toString())
-                        .filter(n -> n.toLowerCase(Locale.ROOT).endsWith(".yml"))
-                        .map(n -> n.substring(0, n.length() - 4).toLowerCase(Locale.ROOT)).forEach(ids::add);
-            } catch (IOException e) { errors.add("Не удалось прочитать ExecutableItems/items: " + e.getMessage()); }
-            for (int chapter = 1; chapter <= 10; chapter++) {
-                String id = catalog.chapterReward(chapter);
-                if (!ids.contains(id.toLowerCase(Locale.ROOT))) errors.add("ExecutableItems ID не найден: " + id + " (глава " + chapter + ")");
-            }
-        }
     }
 
     private void updateStatistics(PlayerData data, QuestType type, long amount) {
@@ -355,13 +395,20 @@ public final class TurnoQuests extends JavaPlugin {
     private void tickPlaytime() { for (Player p : Bukkit.getOnlinePlayers()) record(p, QuestType.PLAYTIME, "ANY", 20); }
     private void updateTrackers() {
         if (!getConfig().getBoolean("tracker.enabled", true)) return;
+        long now = System.currentTimeMillis();
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerData data = data(player);
             if (!data.tracker || data.finished()) continue;
+            long activeUntil = trackerActivityUntil.getOrDefault(player.getUniqueId(), 0L);
+            if (activeUntil < now) {
+                trackerActivityUntil.remove(player.getUniqueId(), activeUntil);
+                continue;
+            }
+            if (trackerContext != null && trackerContext.suppressed(player)) continue;
             QuestDefinition q = catalog.get(data.currentQuest);
             String bar = data.rewardReady(q)
                     ? color("&a&lНаграда готова! &fОткройте &e/quests &fи нажмите зелёную кнопку")
-                    : color("&6Квест #" + q.id() + " &8• &f" + q.name() + " &8[&e" + data.progress + "&7/&e" + q.required() + "&8]");
+                    : color("&6&lЗадание &8• &f" + QuestText.instruction(q) + " &8• &e" + QuestText.compactProgress(q, data.progress));
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(bar));
         }
     }

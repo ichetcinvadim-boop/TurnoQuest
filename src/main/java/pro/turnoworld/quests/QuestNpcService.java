@@ -61,8 +61,8 @@ public final class QuestNpcService implements Listener {
         catch (IllegalArgumentException e) { type = EntityType.VILLAGER; }
         Entity created;
         try { created = location.getWorld().spawnEntity(location, type); }
-        catch (RuntimeException e) {
-            plugin.getLogger().warning("Не удалось создать квестового NPC: " + e.getMessage());
+        catch (Throwable e) {
+            plugin.getLogger().log(java.util.logging.Level.WARNING, "Не удалось создать квестового NPC", e);
             return false;
         }
         if (!(created instanceof LivingEntity)) { created.remove(); return false; }

@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -32,6 +33,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
+import org.bukkit.block.data.Ageable;
 
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +56,13 @@ public final class QuestListener implements Listener {
         PlayerData data = plugin.data(event.getPlayer());
         data.lastSeen = System.currentTimeMillis();
         plugin.trySave(data);
+        plugin.forgetTracker(event.getPlayer());
         walkRemainder.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockDamage(BlockDamageEvent event) {
+        plugin.signalQuestAction(event.getPlayer(), QuestType.BREAK, event.getBlock().getType().name());
     }
     @EventHandler public void onDeath(PlayerDeathEvent event) { plugin.markDeath(event.getEntity()); }
     @EventHandler(priority = EventPriority.HIGHEST) public void onInventory(InventoryClickEvent event) { plugin.gui().click(event); }
@@ -62,6 +70,9 @@ public final class QuestListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
         if (plugin.getConfig().getBoolean("anti-exploit.ignore-player-placed-blocks", true) && plugin.antiExploit().removePlaced(event.getBlock().getLocation())) return;
+        if (FARM_BLOCKS.contains(event.getBlock().getType())
+                && event.getBlock().getBlockData() instanceof Ageable crop
+                && crop.getAge() < crop.getMaximumAge()) return;
         plugin.record(event.getPlayer(), QuestType.BREAK, event.getBlock().getType().name(), 1);
     }
 
@@ -96,6 +107,7 @@ public final class QuestListener implements Listener {
     public void onDamage(EntityDamageByEntityEvent event) {
         Player attacker = playerDamager(event.getDamager());
         if (attacker != null && event.getEntity() instanceof LivingEntity) {
+            plugin.signalQuestAction(attacker, QuestType.KILL, event.getEntityType().name());
             long damage = Math.max(1, Math.round(event.getFinalDamage()));
             plugin.record(attacker, QuestType.DAMAGE, event.getEntityType().name(), damage);
         }
@@ -115,6 +127,10 @@ public final class QuestListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onFish(PlayerFishEvent event) {
+        if (event.getState() == PlayerFishEvent.State.FISHING) {
+            plugin.signalQuestAction(event.getPlayer(), QuestType.FISH, "ANY");
+            return;
+        }
         if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH) return;
         String type = event.getCaught() instanceof Item item ? item.getItemStack().getType().name() : "ANY";
         plugin.record(event.getPlayer(), QuestType.FISH, type, 1);

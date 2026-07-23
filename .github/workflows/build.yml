@@ -3,9 +3,7 @@ name: Build TurnoQuests
 on:
   workflow_dispatch:
   push:
-    branches: [main]
-    paths-ignore:
-      - "release/**"
+  pull_request:
 
 permissions:
   contents: read
@@ -24,25 +22,37 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Compile
-        run: mvn --batch-mode --no-transfer-progress package
+      - name: Compile against real Paper API
+        run: mvn --batch-mode --no-transfer-progress test-compile dependency:build-classpath -Dmdep.outputFile=target/classpath.txt
 
       - name: Run 1000+ checks
         run: java -cp target/classes:target/test-classes pro.turnoworld.quests.TestRunner .
 
+      - name: Build plugin
+        run: mvn --batch-mode --no-transfer-progress package -DskipTests
+
+      - name: Verify runtime ABI
+        run: |
+          CP="$(cat target/classpath.txt)"
+          mkdir -p target/abi
+          javac -cp "$CP" -d target/abi build-support/AbiVerifier.java
+          java -cp "target/abi:$CP" AbiVerifier target/turnoquests-1.5.2.jar $(tr ':' ' ' < target/classpath.txt)
+
       - name: Prepare downloads
         run: |
           mkdir -p release
-          cp target/turnoquests-1.3.0.jar release/TurnoQuests-1.3.0.jar
-          zip -j release/TurnoQuests-1.3.0-package.zip release/TurnoQuests-1.3.0.jar README.md TEST-REPORT.md
-          sha256sum release/TurnoQuests-1.3.0.jar release/TurnoQuests-1.3.0-package.zip > release/SHA256-1.3.0.txt
+          cp target/turnoquests-1.5.2.jar release/TurnoQuests-1.5.2.jar
+          zip -j release/TurnoQuests-1.5.2-package.zip release/TurnoQuests-1.5.2.jar README.md TEST-REPORT.md
+          zip -qr release/TurnoQuests-1.5.2-source.zip src pom.xml build-support .github README.md TEST-REPORT.md
+          sha256sum release/TurnoQuests-1.5.2.jar release/TurnoQuests-1.5.2-package.zip release/TurnoQuests-1.5.2-source.zip > release/SHA256-1.5.2.txt
 
       - name: Upload verified downloads
         uses: actions/upload-artifact@v4
         with:
-          name: TurnoQuests-1.3.0
+          name: TurnoQuests-1.5.2
           path: |
-            release/TurnoQuests-1.3.0.jar
-            release/TurnoQuests-1.3.0-package.zip
-            release/SHA256-1.3.0.txt
+            release/TurnoQuests-1.5.2.jar
+            release/TurnoQuests-1.5.2-package.zip
+            release/TurnoQuests-1.5.2-source.zip
+            release/SHA256-1.5.2.txt
           if-no-files-found: error

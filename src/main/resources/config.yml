@@ -6,23 +6,13 @@ backup-interval-hours: 12
 
 economy:
   enabled: true
-  # Итог за все 100 квестов: около 625 000, без учёта сложных бонусов.
-  quest-reward-multiplier: 0.4
+  # Значения money в quests.yml уже являются итоговыми. Можно изменить все награды одним множителем.
+  quest-reward-multiplier: 1.0
   # Без Vault деньги останутся в очереди и будут выданы после появления экономики.
 
-executable-items:
-  give-command: "ei give %player% %item% 1"
-  rewards:
-    1: luk_astralnogo_shtorma
-    2: kub_rosta_single
-    3: 02_kirka_shahtyora
-    4: 04_topor_drovoseka
-    5: 08_pulse_boots
-    6: heart_of_abyss
-    7: aura_armor_hardness
-    8: totem_dragonid
-    9: 01_frostmourn
-    10: 09_krylya_arhangela
+playerpoints:
+  # Осколки выдаются напрямую через официальный API по UUID, в том числе офлайн-игрокам.
+  enabled: true
 
 gui:
   title: "&0Квесты TurnoWorld"
@@ -31,7 +21,14 @@ gui:
 
 tracker:
   enabled: true
-  interval-ticks: 40
+  # Трекер появляется только после подходящего действия и сам исчезает.
+  interval-ticks: 10
+  active-seconds: 5
+  reward-seconds: 10
+  suppress-in-pvp: true
+  pvp-placeholder: "%combatlogx_tag_count%"
+  suppress-in-events: true
+  event-placeholder: "%turnoevents_joined%"
 
 anti-exploit:
   ignore-creative: true
