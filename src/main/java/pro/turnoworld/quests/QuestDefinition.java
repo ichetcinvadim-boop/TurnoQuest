@@ -12,7 +12,7 @@ public record QuestDefinition(
         String target,
         long required,
         double money,
-        String rewardItem,
+        int shards,
         boolean timed,
         long timeLimitSeconds,
         boolean noDeathBonus,
@@ -26,11 +26,11 @@ public record QuestDefinition(
     public QuestDefinition {
         description = List.copyOf(description);
         target = target == null ? "ANY" : target.toUpperCase();
-        rewardItem = rewardItem == null ? "" : rewardItem;
         icon = icon == null || icon.isBlank() ? "PAPER" : icon.toUpperCase();
         if (id < 1 || id > 100) throw new IllegalArgumentException("Quest id must be 1..100");
         if (chapter != ((id - 1) / 10) + 1) throw new IllegalArgumentException("Wrong chapter for quest " + id);
         if (required < 1) throw new IllegalArgumentException("required must be positive");
+        if (money < 0 || shards < 0 || bonusMoney < 0) throw new IllegalArgumentException("rewards must not be negative");
     }
 
     public boolean matches(String value) {

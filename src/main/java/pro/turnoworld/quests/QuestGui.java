@@ -37,8 +37,9 @@ public final class QuestGui {
             lore.add("&7Квесты: &f" + complete + "/10");
             lore.add("&7Статус: " + status);
             lore.add("");
-            lore.add("&7Награда главы:");
-            lore.add("&e" + plugin.catalog().chapterReward(chapter));
+            lore.add("&7Всего за 10 квестов:");
+            lore.add("&e" + plugin.rewards().format(plugin.rewards().questAmount(plugin.catalog().chapterMoney(chapter))) + " монет");
+            lore.add("&d" + plugin.catalog().chapterShards(chapter) + " осколков");
             lore.add("");
             lore.add("&6Нажмите, чтобы открыть");
             inv.setItem(CHAPTER_SLOTS[chapter - 1], item(CHAPTER_ICONS[chapter - 1], "&6&lГлава " + chapter + " &8• &f" + plugin.catalog().chapterName(chapter), lore));
@@ -63,7 +64,8 @@ public final class QuestGui {
         inv.setItem(42, item(Material.CHEST, "&6&lКак получить награду", List.of("&7Выполните текущий квест.", "&7Красная кнопка станет &aзелёной&7.", "&7Нажмите на неё для получения приза.", "", "&eНажмите, чтобы открыть текущую главу")));
         inv.setItem(49, item(Material.BOOK, "&f&lСтатистика", List.of("&7Пройдено: &f" + data.highestCompleted + "/100", "&7Лучший результат: &f" + data.lifetimeHighest,
                 "&7Престиж: &f" + data.prestige, "&7Сломано блоков: &f" + data.blocksBroken, "&7Побеждено существ: &f" + data.mobsKilled,
-                "&7Пройдено блоков: &f" + data.distanceWalked, "&7Заработано: &e" + data.moneyEarned)));
+                "&7Пройдено блоков: &f" + data.distanceWalked, "&7Заработано: &e" + data.moneyEarned,
+                "&7Получено осколков: &d" + data.shardsEarned)));
         player.openInventory(inv);
     }
 
@@ -85,7 +87,13 @@ public final class QuestGui {
             List<String> lore = questLore(q, data, current, ready, status);
             inv.setItem(20 + offset, item(icon, "&6#" + q.id() + " &f" + q.name(), lore));
         }
-        inv.setItem(4, item(Material.CHEST, "&6&lНаграда главы", List.of("&e" + plugin.catalog().chapterReward(chapter), "&7Выдаётся только один раз", "&7после десятого квеста главы")));
+        inv.setItem(4, item(Material.CHEST, "&6&lНаграды главы", List.of(
+                "&7За все десять квестов:",
+                "&e" + plugin.rewards().format(plugin.rewards().questAmount(plugin.catalog().chapterMoney(chapter))) + " монет",
+                "&d" + plugin.catalog().chapterShards(chapter) + " осколков",
+                "",
+                "&7Каждая награда забирается",
+                "&7зелёной кнопкой отдельно.")));
         inv.setItem(45, item(Material.ARROW, "&eПредыдущая глава", List.of()));
         inv.setItem(49, item(Material.BARRIER, "&cНазад", List.of("&7Вернуться к главам")));
         inv.setItem(53, item(Material.ARROW, "&eСледующая глава", List.of()));
@@ -152,7 +160,8 @@ public final class QuestGui {
             }
         }
         lore.add("");
-        lore.add("&7Награда: &e" + plugin.rewards().format(plugin.rewards().questAmount(quest.money())));
+        lore.add("&7Валюта: &e" + plugin.rewards().format(plugin.rewards().questAmount(quest.money())));
+        lore.add("&7Осколки: &d" + quest.shards());
         if (quest.timed()) lore.add("&bБонус за время: &e" + plugin.rewards().format(plugin.rewards().questAmount(quest.bonusMoney())));
         if (quest.noDeathBonus()) lore.add("&bБонус без смерти: &e" + plugin.rewards().format(plugin.rewards().questAmount(quest.bonusMoney())));
         lore.add("&7Статус: " + status);

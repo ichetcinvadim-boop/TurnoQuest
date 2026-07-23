@@ -18,10 +18,10 @@ public final class PlayerData {
     public boolean diedDuringQuest;
     public boolean tracker = true;
     public final Set<Integer> rewardedQuests = new HashSet<>();
-    public final Set<Integer> rewardedChapters = new HashSet<>();
+    public final Set<Integer> rewardedShards = new HashSet<>();
     public final Set<Integer> rewardedBonuses = new HashSet<>();
     public final Set<Integer> pendingMoney = new HashSet<>();
-    public final Set<Integer> pendingItems = new HashSet<>();
+    public final Set<Integer> pendingShards = new HashSet<>();
     public final Set<String> claimedSecrets = new HashSet<>();
     public String dailyKey = "";
     public long dailyProgress;
@@ -35,6 +35,7 @@ public final class PlayerData {
     public long playTicks;
     public long fishCaught;
     public long moneyEarned;
+    public long shardsEarned;
     public long lastSeen;
     public int prestige;
 
@@ -62,10 +63,10 @@ public final class PlayerData {
         p.setProperty("diedDuringQuest", String.valueOf(diedDuringQuest));
         p.setProperty("tracker", String.valueOf(tracker));
         p.setProperty("rewardedQuests", ints(rewardedQuests));
-        p.setProperty("rewardedChapters", ints(rewardedChapters));
+        p.setProperty("rewardedShards", ints(rewardedShards));
         p.setProperty("rewardedBonuses", ints(rewardedBonuses));
         p.setProperty("pendingMoney", ints(pendingMoney));
-        p.setProperty("pendingItems", ints(pendingItems));
+        p.setProperty("pendingShards", ints(pendingShards));
         p.setProperty("claimedSecrets", String.join(",", claimedSecrets));
         p.setProperty("dailyKey", dailyKey);
         p.setProperty("dailyProgress", String.valueOf(dailyProgress));
@@ -79,6 +80,7 @@ public final class PlayerData {
         p.setProperty("playTicks", String.valueOf(playTicks));
         p.setProperty("fishCaught", String.valueOf(fishCaught));
         p.setProperty("moneyEarned", String.valueOf(moneyEarned));
+        p.setProperty("shardsEarned", String.valueOf(shardsEarned));
         p.setProperty("lastSeen", String.valueOf(lastSeen));
         p.setProperty("prestige", String.valueOf(prestige));
         return p;
@@ -94,10 +96,18 @@ public final class PlayerData {
         d.diedDuringQuest = bool(p, "diedDuringQuest", false);
         d.tracker = bool(p, "tracker", true);
         parseInts(p.getProperty("rewardedQuests", ""), d.rewardedQuests);
-        parseInts(p.getProperty("rewardedChapters", ""), d.rewardedChapters);
         parseInts(p.getProperty("rewardedBonuses", ""), d.rewardedBonuses);
         parseInts(p.getProperty("pendingMoney", ""), d.pendingMoney);
-        parseInts(p.getProperty("pendingItems", ""), d.pendingItems);
+        if (p.containsKey("rewardedShards")) {
+            parseInts(p.getProperty("rewardedShards", ""), d.rewardedShards);
+            parseInts(p.getProperty("pendingShards", ""), d.pendingShards);
+        } else {
+            // 1.4.x migration: completed rewards never pay shards retroactively.
+            // A completed but still unclaimed green-button reward does receive its
+            // new shard part, because the player has not collected that reward yet.
+            d.rewardedShards.addAll(d.rewardedQuests);
+            d.pendingMoney.stream().filter(id -> id > 0 && id <= 100).forEach(d.pendingShards::add);
+        }
         if (!p.getProperty("claimedSecrets", "").isBlank()) d.claimedSecrets.addAll(Arrays.asList(p.getProperty("claimedSecrets").split(",")));
         d.dailyKey = p.getProperty("dailyKey", "");
         d.dailyProgress = number(p, "dailyProgress", 0);
@@ -111,6 +121,7 @@ public final class PlayerData {
         d.playTicks = number(p, "playTicks", 0);
         d.fishCaught = number(p, "fishCaught", 0);
         d.moneyEarned = number(p, "moneyEarned", 0);
+        d.shardsEarned = number(p, "shardsEarned", 0);
         d.lastSeen = number(p, "lastSeen", 0);
         d.prestige = integer(p, "prestige", 0);
         return d;

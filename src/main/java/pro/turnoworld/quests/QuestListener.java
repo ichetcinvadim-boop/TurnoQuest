@@ -33,6 +33,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
+import org.bukkit.block.data.Ageable;
 
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +70,9 @@ public final class QuestListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
         if (plugin.getConfig().getBoolean("anti-exploit.ignore-player-placed-blocks", true) && plugin.antiExploit().removePlaced(event.getBlock().getLocation())) return;
+        if (FARM_BLOCKS.contains(event.getBlock().getType())
+                && event.getBlock().getBlockData() instanceof Ageable crop
+                && crop.getAge() < crop.getMaximumAge()) return;
         plugin.record(event.getPlayer(), QuestType.BREAK, event.getBlock().getType().name(), 1);
     }
 

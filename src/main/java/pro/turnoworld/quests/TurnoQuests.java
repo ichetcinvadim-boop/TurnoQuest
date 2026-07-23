@@ -23,9 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -118,9 +116,15 @@ public final class TurnoQuests extends JavaPlugin {
                 Files.copy(quests.toPath(), new File(getDataFolder(), "quests-before-1.2.0.yml").toPath(), StandardCopyOption.REPLACE_EXISTING);
                 saveResource("quests.yml", true);
                 getLogger().info("Старые квесты с боссами сохранены в quests-before-1.2.0.yml и заменены новой цепочкой.");
+                text = Files.readString(quests.toPath());
+            }
+            if (!text.contains("shards:")) {
+                Files.copy(quests.toPath(), new File(getDataFolder(), "quests-before-1.5.0.yml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                saveResource("quests.yml", true);
+                getLogger().info("Квесты 1.4.x сохранены в quests-before-1.5.0.yml и заменены долгой сезонной цепочкой 1.5.0.");
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Не удалось обновить quests.yml до 1.2.0", e);
+            throw new IllegalStateException("Не удалось обновить quests.yml до 1.5.0", e);
         }
         migrateWoodenToolQuest(quests);
         if (getConfig().contains("bosses") || getConfig().contains("citizens")) {
@@ -150,7 +154,10 @@ public final class TurnoQuests extends JavaPlugin {
         reloadConfig();
         messages = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "messages.yml"));
         catalog = QuestCatalog.load(new File(getDataFolder(), "quests.yml"));
-        if (rewards != null) rewards.hookEconomy();
+        if (rewards != null) {
+            rewards.hookEconomy();
+            rewards.hookPlayerPoints();
+        }
     }
 
     public void record(Player player, QuestType type, String target, long amount) {
@@ -254,7 +261,7 @@ public final class TurnoQuests extends JavaPlugin {
         String text = "&6&l" + data.lastName + " &fзавершил главу &e" + chapter + " «" + catalog.chapterName(chapter) + "»";
         if (getConfig().getBoolean("milestones.broadcast-chapters", true)) Bukkit.broadcastMessage(color(prefix() + text));
         if (player != null && getConfig().getBoolean("milestones.title-chapters", true))
-            player.sendTitle(color("&6&lГлава " + chapter + " завершена"), color("&eОсобая награда получена"), 10, 70, 20);
+            player.sendTitle(color("&6&lГлава " + chapter + " завершена"), color("&eСезонный путь продолжается"), 10, 70, 20);
     }
 
     public void processPending(Player player) {
@@ -331,28 +338,10 @@ public final class TurnoQuests extends JavaPlugin {
         List<String> errors = new java.util.ArrayList<>(catalog.validate());
         if (!hasPlugin("Vault")) errors.add("Vault не найден: денежные награды останутся в очереди");
         if (!rewards.economyAvailable()) errors.add("Провайдер экономики Vault не найден");
-        if (!hasPlugin("ExecutableItems")) errors.add("ExecutableItems не найден: предметные награды не будут выданы");
+        if (!hasPlugin("PlayerPoints")) errors.add("PlayerPoints не найден: награды осколками останутся в очереди");
+        if (!rewards.shardsAvailable()) errors.add("API PlayerPoints недоступен");
         if (hasPlugin("BetonQuest")) errors.add("BetonQuest включён и может перехватить /quests — удалите его alias или отключите старый плагин");
-        for (int chapter = 1; chapter <= 10; chapter++) if (catalog.chapterReward(chapter).isBlank()) errors.add("Пустой EI reward главы " + chapter);
-        validateExternalIds(errors);
         return errors;
-    }
-
-    private void validateExternalIds(List<String> errors) {
-        File plugins = getDataFolder().getParentFile();
-        Path itemRoot = plugins.toPath().resolve("ExecutableItems").resolve("items");
-        if (Files.isDirectory(itemRoot)) {
-            Set<String> ids = new HashSet<>();
-            try (var paths = Files.walk(itemRoot)) {
-                paths.filter(Files::isRegularFile).map(p -> p.getFileName().toString())
-                        .filter(n -> n.toLowerCase(Locale.ROOT).endsWith(".yml"))
-                        .map(n -> n.substring(0, n.length() - 4).toLowerCase(Locale.ROOT)).forEach(ids::add);
-            } catch (IOException e) { errors.add("Не удалось прочитать ExecutableItems/items: " + e.getMessage()); }
-            for (int chapter = 1; chapter <= 10; chapter++) {
-                String id = catalog.chapterReward(chapter);
-                if (!ids.contains(id.toLowerCase(Locale.ROOT))) errors.add("ExecutableItems ID не найден: " + id + " (глава " + chapter + ")");
-            }
-        }
     }
 
     private void updateStatistics(PlayerData data, QuestType type, long amount) {

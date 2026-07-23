@@ -10,15 +10,18 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
+import java.lang.reflect.Method;
 
 public final class RewardService {
     private final TurnoQuests plugin;
     private Economy economy;
+    private Object playerPointsApi;
+    private Method givePoints;
 
     public RewardService(TurnoQuests plugin) {
         this.plugin = plugin;
         hookEconomy();
+        hookPlayerPoints();
     }
 
     public void hookEconomy() {
@@ -27,14 +30,33 @@ public final class RewardService {
     }
 
     public boolean economyAvailable() { return economy != null; }
+    public boolean shardsAvailable() {
+        if (!plugin.getConfig().getBoolean("playerpoints.enabled", true)) return false;
+        if (playerPointsApi == null || givePoints == null) hookPlayerPoints();
+        return playerPointsApi != null && givePoints != null;
+    }
+
+    public void hookPlayerPoints() {
+        playerPointsApi = null;
+        givePoints = null;
+        if (!plugin.getConfig().getBoolean("playerpoints.enabled", true)) return;
+        try {
+            var pointsPlugin = Bukkit.getPluginManager().getPlugin("PlayerPoints");
+            if (pointsPlugin == null || !pointsPlugin.isEnabled()) return;
+            playerPointsApi = pointsPlugin.getClass().getMethod("getAPI").invoke(pointsPlugin);
+            givePoints = playerPointsApi.getClass().getMethod("give", java.util.UUID.class, int.class);
+        } catch (ReflectiveOperationException error) {
+            plugin.getLogger().warning("PlayerPoints API недоступен: " + error.getClass().getSimpleName());
+            playerPointsApi = null;
+            givePoints = null;
+        }
+    }
 
     public void queueQuest(PlayerData data, QuestDefinition quest, boolean timedBonus, boolean noDeathBonus) {
         if (data.rewardedQuests.add(quest.id())) {
             data.pendingMoney.add(quest.id());
         }
-        if (quest.id() % 10 == 0 && data.rewardedChapters.add(quest.chapter())) {
-            data.pendingItems.add(quest.chapter());
-        }
+        if (quest.shards() > 0 && data.rewardedShards.add(quest.id())) data.pendingShards.add(quest.id());
         // Bonus is paid with the main reward. The exact earned bonus is encoded as a
         // negative synthetic id, so a restart cannot duplicate it.
         if ((timedBonus || noDeathBonus) && quest.bonusMoney() > 0 && data.rewardedBonuses.add(quest.id())) data.pendingMoney.add(-quest.id());
@@ -54,20 +76,13 @@ public final class RewardService {
                 messages.add("&a+" + format(amount) + " монет");
             }
         }
-        if (online != null) {
-            for (Integer chapter : new ArrayList<>(data.pendingItems)) {
-                if (online.getInventory().firstEmpty() < 0) {
-                    messages.add("&eОсвободите слот для предмета главы " + chapter);
-                    break;
-                }
-                String item = catalog.chapterReward(chapter);
-                if (item.isBlank()) { data.pendingItems.remove(chapter); continue; }
-                String command = plugin.getConfig().getString("executable-items.give-command", "ei give %player% %item% 1")
-                        .replace("%player%", online.getName()).replace("%item%", item);
-                if (Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command)) {
-                    data.pendingItems.remove(chapter);
-                    messages.add("&aПолучен предмет: &e" + item);
-                } else messages.add("&cНе удалось выполнить команду выдачи предмета " + item);
+        for (Integer id : new ArrayList<>(data.pendingShards)) {
+            QuestDefinition q = catalog.get(id);
+            if (q == null || q.shards() <= 0) { data.pendingShards.remove(id); continue; }
+            if (giveShards(data.uuid, q.shards())) {
+                data.pendingShards.remove(id);
+                data.shardsEarned += q.shards();
+                messages.add("&d+" + q.shards() + " осколков");
             }
         }
         return messages;
@@ -81,23 +96,12 @@ public final class RewardService {
 
         claimMoneyEntry(data, account, quest, questId, quest.money(), messages);
         claimMoneyEntry(data, account, quest, -questId, quest.bonusMoney(), messages);
-
-        if (online != null && questId % 10 == 0 && data.pendingItems.contains(quest.chapter())) {
-            if (online.getInventory().firstEmpty() < 0) {
-                messages.add("&eОсвободите один слот для особого предмета главы " + quest.chapter());
-            } else {
-                String item = catalog.chapterReward(quest.chapter());
-                if (item.isBlank()) {
-                    data.pendingItems.remove(quest.chapter());
-                } else {
-                    String command = plugin.getConfig().getString("executable-items.give-command", "ei give %player% %item% 1")
-                            .replace("%player%", online.getName()).replace("%item%", item);
-                    if (Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command)) {
-                        data.pendingItems.remove(quest.chapter());
-                        messages.add("&aПолучен особый предмет: &e" + item);
-                    } else messages.add("&cНе удалось выдать предмет " + item + ". Награда сохранена.");
-                }
-            }
+        if (data.pendingShards.contains(questId)) {
+            if (giveShards(data.uuid, quest.shards())) {
+                data.pendingShards.remove(questId);
+                data.shardsEarned += quest.shards();
+                messages.add("&d+" + quest.shards() + " осколков");
+            } else messages.add("&cНе удалось выдать " + quest.shards() + " осколков PlayerPoints. Награда сохранена.");
         }
         return messages;
     }
@@ -120,7 +124,7 @@ public final class RewardService {
     public boolean hasPendingForQuest(PlayerData data, QuestDefinition quest) {
         if (quest == null) return false;
         if (data.pendingMoney.contains(quest.id()) || data.pendingMoney.contains(-quest.id())) return true;
-        return quest.id() % 10 == 0 && data.pendingItems.contains(quest.chapter());
+        return data.pendingShards.contains(quest.id());
     }
 
     public boolean deposit(OfflinePlayer player, double amount) {
@@ -130,11 +134,22 @@ public final class RewardService {
         return response != null && response.transactionSuccess();
     }
 
+    public boolean giveShards(java.util.UUID playerId, int amount) {
+        if (amount <= 0) return true;
+        if (!shardsAvailable()) return false;
+        try {
+            return Boolean.TRUE.equals(givePoints.invoke(playerPointsApi, playerId, amount));
+        } catch (ReflectiveOperationException | RuntimeException error) {
+            plugin.getLogger().warning("Не удалось выдать осколки PlayerPoints игроку " + playerId + ": " + error.getClass().getSimpleName());
+            return false;
+        }
+    }
+
     public String format(double value) {
         return economy == null ? String.format(Locale.ROOT, "%,.0f", value) : economy.format(value);
     }
 
     public double questAmount(double configured) {
-        return configured * Math.max(0, plugin.getConfig().getDouble("economy.quest-reward-multiplier", 0.4));
+        return configured * Math.max(0, plugin.getConfig().getDouble("economy.quest-reward-multiplier", 1.0));
     }
 }
