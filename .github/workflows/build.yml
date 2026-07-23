@@ -36,23 +36,23 @@ jobs:
           CP="$(cat target/classpath.txt)"
           mkdir -p target/abi
           javac -cp "$CP" -d target/abi build-support/AbiVerifier.java
-          java -cp "target/abi:$CP" AbiVerifier target/turnoquests-1.5.1.jar $(tr ':' ' ' < target/classpath.txt)
+          java -cp "target/abi:$CP" AbiVerifier target/turnoquests-1.5.2.jar $(tr ':' ' ' < target/classpath.txt)
 
       - name: Prepare downloads
         run: |
           mkdir -p release
-          cp target/turnoquests-1.5.1.jar release/TurnoQuests-1.5.1.jar
-          zip -j release/TurnoQuests-1.5.1-package.zip release/TurnoQuests-1.5.1.jar README.md TEST-REPORT.md
-          zip -qr release/TurnoQuests-1.5.1-source.zip src pom.xml build-support .github README.md TEST-REPORT.md
-          sha256sum release/TurnoQuests-1.5.1.jar release/TurnoQuests-1.5.1-package.zip release/TurnoQuests-1.5.1-source.zip > release/SHA256-1.5.1.txt
+          cp target/turnoquests-1.5.2.jar release/TurnoQuests-1.5.2.jar
+          zip -j release/TurnoQuests-1.5.2-package.zip release/TurnoQuests-1.5.2.jar README.md TEST-REPORT.md
+          zip -qr release/TurnoQuests-1.5.2-source.zip src pom.xml build-support .github README.md TEST-REPORT.md
+          sha256sum release/TurnoQuests-1.5.2.jar release/TurnoQuests-1.5.2-package.zip release/TurnoQuests-1.5.2-source.zip > release/SHA256-1.5.2.txt
 
       - name: Upload verified downloads
         uses: actions/upload-artifact@v4
         with:
-          name: TurnoQuests-1.5.1
+          name: TurnoQuests-1.5.2
           path: |
-            release/TurnoQuests-1.5.1.jar
-            release/TurnoQuests-1.5.1-package.zip
-            release/TurnoQuests-1.5.1-source.zip
-            release/SHA256-1.5.1.txt
+            release/TurnoQuests-1.5.2.jar
+            release/TurnoQuests-1.5.2-package.zip
+            release/TurnoQuests-1.5.2-source.zip
+            release/SHA256-1.5.2.txt
           if-no-files-found: error
