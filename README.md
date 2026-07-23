@@ -9,6 +9,12 @@
 
 ExecutableItems, MythicMobs, Citizens, BetonQuest, боссы и арены не требуются. PlaceholderAPI, CombatLogX и TurnoEvents используются только как необязательные интеграции трекера.
 
+## Скачать
+
+- [TurnoQuests-1.5.0.jar](https://github.com/ichetcinvadim-boop/TurnoQuest/raw/refs/heads/agent/contextual-tracker-1.4.0/release/TurnoQuests-1.5.0.jar)
+- [Полный архив](https://github.com/ichetcinvadim-boop/TurnoQuest/raw/refs/heads/agent/contextual-tracker-1.4.0/release/TurnoQuests-1.5.0-package.zip)
+- [Исходный код](https://github.com/ichetcinvadim-boop/TurnoQuest/raw/refs/heads/agent/contextual-tracker-1.4.0/release/TurnoQuests-1.5.0-source.zip)
+
 ## Обновление с 1.4.x
 
 1. Остановите сервер.
